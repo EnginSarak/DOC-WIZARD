@@ -1,109 +1,147 @@
-# DOC WIZARD
+<div align="center">
 
-A small terminal tool for the outbound document workflow: it renames the PDFs that come
-out of Business Central, stamps and prints them, moves them into the right folders and
-builds the Excel files that go with a pump pick.
+<img src="docs/01-main-menu.png" alt="DOC WIZARD" width="520"/>
 
-Everything runs from one window, keyboard only. Windows, PowerShell and Excel is all
-it needs.
+**DOC WIZARD** · v1.0.0
 
-![Main menu](docs/01-main-menu.png)
+*Rename, print, file and build the pump/groupage Excel sheets for warehouse pick lists — one keyboard-only terminal.*
 
-Five entries, arrow keys and Enter. That is the whole interface.
+*By [Engin Sarak](https://github.com/EnginSarak)*
 
----
+![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6?logo=windows&logoColor=white)
+![PowerShell](https://img.shields.io/badge/PowerShell-5.1-5391FE?logo=powershell&logoColor=white)
+![Excel](https://img.shields.io/badge/Excel-COM%20interop-217346?logo=microsoftexcel&logoColor=white)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
 
-## Renaming and creating documents
-
-![Rename and groupage](docs/02-rename-groupage.png)
-
-Downloaded PDFs still have names like `Custom Picking List (1).pdf`. The tool reads each
-file and renames it to the numbers it finds inside: pick number, customer, order number.
-
-If two or more pick lists belong to the same customer, that is a groupage. The tool asks
-before it does anything, stamps the PDFs and creates the groupage sheet from the template
-with customer and pick numbers already filled in.
+</div>
 
 ---
 
-## Pump picks
+## Table of Contents
 
-![Pump list](docs/03-pump-list.png)
-
-When a pick list contains COMPAT Ella pumps, the tool offers to build the two Excel files
-for it. Both come straight out of the PDF, so no line list has to be downloaded:
-
-- **Pumpen.xlsx** - every serial number grouped by bin, with counts and a total.
-  Rows that are already in the PICKING bin are left out.
-- **Control.xlsx** - the scan sheet for the warehouse. Serial numbers on the left,
-  pallet columns on the right. A scanned number turns green, anything still red was
-  missed.
-
----
-
-## Printing
-
-![Print](docs/04-print.png)
-
-Delivery documents and warehouse picks in one list. PWS and PAC belonging together are
-printed as a pair, delivery documents twice and picks once. Everything already sent is
-marked, so nothing gets printed twice by accident.
+- [Why](#why)
+- [Features](#features)
+  - [Rename and create documents](#rename-and-create-documents)
+  - [Pump picks](#pump-picks)
+  - [Print](#print)
+  - [Move to folders](#move-to-folders)
+  - [Settings](#settings)
+  - [Self-update](#self-update)
+- [Install](#install)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
 
 ---
 
-## Moving to folders
+## Why
 
-![Move](docs/05-move.png)
+Business Central exports pick lists as PDFs with generic names like `Custom Picking
+List (1).pdf`. Getting them into the right filename, the right printer tray and the
+right folder is the same handful of steps every time — and building the pump list and
+scan sheet for a COMPAT Ella pick means re-typing serial numbers by hand.
 
-Each entry moves the whole bundle: the pick list together with its pump list, a groupage
-together with its sheet. Control files have their own section and go to the pump control
-folder, since they are not for printing.
+DOC WIZARD reads the PDFs directly and does all of that: renaming, stamping, printing,
+filing, and generating the Excel sheets from data already sitting in the file. No line
+list export, no copy-paste, no template hunting.
 
-Delivery documents take a different route - the tool reads customer, country and date out
-of the PDF and suggests the matching month folder in the outbound structure.
-
----
-
-## Settings
-
-![Settings](docs/06-settings.png)
-
-Folders and printer are asked once on the first start and stored next to the program.
-Green means set. `reset.bat` clears all of it, which is what you run before handing the
-folder to someone else.
+Single PowerShell script, no install beyond unzip, keyboard-driven menu, one COM call
+into Excel where a formula can't do the job.
 
 ---
 
-## Updates
+## Features
 
-![Update](docs/07-update.png)
+### Rename and create documents
 
-On every start the tool checks this repository for a newer version. If there is one it
-shows what changed and asks. Nothing is downloaded without that answer, and personal
-settings are never touched. No internet, no message - it just starts.
+<img src="docs/02-rename-groupage.png" width="620"/>
+
+Reads PAC / PWS / WP and the order number out of each PDF and renames it accordingly.
+When two or more pick lists share a customer, it flags it as a groupage, stamps the
+PDFs and builds the groupage sheet from the template with customer and pick numbers
+already filled in.
+
+### Pump picks
+
+<img src="docs/03-pump-list.png" width="620"/>
+
+If a pick list contains COMPAT Ella pumps, it offers to build two files straight from
+the PDF — no line list needed:
+
+- **Pumpen.xlsx** — serial numbers grouped by bin, with counts and a total. Rows still
+  sitting in the PICKING bin are excluded.
+- **Control.xlsx** — the scan sheet for the warehouse floor. A scanned serial turns
+  green, anything still red was missed.
+
+### Print
+
+<img src="docs/04-print.png" width="620"/>
+
+Delivery documents and warehouse picks in one list. Matched PAC/PWS pairs print
+together, deliveries twice, picks once. Anything already sent is marked so it doesn't
+go out twice by accident.
+
+### Move to folders
+
+<img src="docs/05-move.png" width="620"/>
+
+Each entry moves the full bundle — pick list with its pump list, groupage with its
+sheet. Control files get their own section and go to the pump control folder, not the
+print queue. Delivery documents are routed by reading customer, country and date out of
+the PDF and suggesting the matching month folder.
+
+### Settings
+
+<img src="docs/06-settings.png" width="620"/>
+
+Folders and printer are asked once and stored next to the script. `reset.bat` clears
+all of it — run it before handing the folder to someone else.
+
+### Self-update
+
+<img src="docs/07-update.png" width="620"/>
+
+Checks this repository on every start. If a newer version exists it shows the changelog
+and asks before touching anything. No prompt if offline or unreachable, no personal
+settings ever overwritten.
 
 ---
 
 ## Install
 
-1. `Code` -> `Download ZIP`
-2. Unpack the folder anywhere
-3. Start `DOC WIZARD.bat`
-4. Answer the setup questions once
+```
+Code → Download ZIP → unpack → run "DOC WIZARD.bat"
+```
 
-## Files
+First start asks for folders and printer once.
 
-| File | Purpose |
+---
+
+## Tech stack
+
+| Layer | What |
 | --- | --- |
-| `DOC WIZARD.bat` | starts the tool |
-| `_doc_wizard.ps1` | the program |
-| `pumplist_template.xlsx` | template for the pump list |
-| `pump_control_template.xlsx` | template for the scan control file |
-| `groupage_template.xlsx` | template for the groupage sheet |
-| `reset.bat` | removes all personal settings |
-| `update.txt` | version and file list used by the updater |
+| Runtime | PowerShell 5.1, Windows Console API |
+| Spreadsheets | Excel COM interop |
+| PDF parsing | Manual PDF stream inflate + text-token extraction, no external library |
+| Update channel | Raw file diff against this repo's `main` branch |
+
+---
+
+## Project structure
+
+```
+DOC WIZARD/
+├── DOC WIZARD.bat              starts the tool
+├── _doc_wizard.ps1             the program
+├── reset.bat                   clears personal settings
+├── update.txt                  version + file list for the updater
+├── pumplist_template.xlsx      pump list template
+├── pump_control_template.xlsx  scan control template
+├── groupage_template.xlsx      groupage sheet template
+└── docs/                       screenshots used above
+```
 
 `_doc_wizard_settings.txt`, `_doc_wizard_pairs.txt` and `_doc_wizard_printed.txt` are
-created at runtime and stay on the machine.
+created at runtime and never leave the machine.
 
 *Customer names and numbers in the screenshots are made up.*
