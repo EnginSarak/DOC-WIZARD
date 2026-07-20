@@ -4,7 +4,7 @@
 
 **DOC WIZARD** · v1.0.0
 
-*A Windows terminal tool that automates renaming, printing, filing and Excel generation for warehouse pick lists and delivery notes*
+*A PowerShell-based tool that automates renaming, printing, filing and Excel generation for warehouse pick lists and delivery notes*
 
 *By [Engin Sarak](https://github.com/EnginSarak)*
 
