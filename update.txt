@@ -1,0 +1,11 @@
+VERSION=1.0.0
+NOTE=Pump lists and control files from pick list PDFs
+NOTE=Groupage sheet is prefilled with customer and pick numbers
+NOTE=Loading animations and plain banner style
+FILE=_doc_wizard.ps1
+FILE=DOC WIZARD.bat
+FILE=reset.bat
+FILE=pumplist_template.xlsx
+FILE=pump_control_template.xlsx
+FILE=groupage_template.xlsx
+FILE=docwizard.ico
