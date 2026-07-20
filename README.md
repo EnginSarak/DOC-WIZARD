@@ -4,7 +4,7 @@
 
 **DOC WIZARD** · v1.0.0
 
-*Rename, print, file and build the pump/groupage Excel sheets for warehouse pick lists — one keyboard-only terminal.*
+*A Windows terminal tool that automates renaming, printing, filing and Excel generation for warehouse pick lists and delivery notes*
 
 *By [Engin Sarak](https://github.com/EnginSarak)*
 
