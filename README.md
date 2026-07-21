@@ -153,12 +153,6 @@ created at runtime and never leave the machine.
 
 - Auto rename warns when a PAC document is missing its PWS pair, or vice versa
 
-### v1.0.0
-
-- Pump lists and control files built straight from pick list PDFs
-- Groupage sheet prefilled with customer and pick numbers
-- Loading animations and plain banner style
-
 ---
 
 *Customer names and numbers in the screenshots are made up.*
