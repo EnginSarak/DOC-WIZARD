@@ -36,7 +36,7 @@
 ## Why
 
 Business Central exports pick lists as PDFs with generic names like `Custom Picking
-List (1).pdf`. Getting them into the right filename, the right printer tray and the
+List.pdf`. Getting them into the right filename, the right printer tray and the
 right folder is the same handful of steps every time — and building the pump list and
 scan sheet for a COMPAT Ella pick means re-typing serial numbers by hand.
 
