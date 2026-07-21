@@ -699,7 +699,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '1.0.0'
+$script:AppVersion = '1.0.1'
 $script:UpdateOwner = 'EnginSarak'
 $script:UpdateRepo = 'DOC-WIZARD'
 $script:UpdateBranch = 'main'
@@ -1200,6 +1200,7 @@ function Invoke-Rename {
     $renamed = 0
     $skipped = 0
     $fail = 0
+    $missingPairs = 0
 
     $pairFile = Join-Path $AppDir "_doc_wizard_pairs.txt"
     $pairs = @{}
@@ -1262,6 +1263,36 @@ function Invoke-Rename {
         try { Set-Content -LiteralPath $pairFile -Value (@($pairs.GetEnumerator() | ForEach-Object { $_.Key + "=" + $_.Value })) } catch { }
     }
 
+    $pacFiles = @(Get-ChildItem -LiteralPath $WorkDir -Filter 'PAC*.pdf' -ErrorAction SilentlyContinue)
+    $pwsFiles = @(Get-ChildItem -LiteralPath $WorkDir -Filter 'PWS*.pdf' -ErrorAction SilentlyContinue)
+    $pwsByNum = @{}
+    foreach ($f in $pwsFiles) { if ($f.Name -match '^(PWS\d+)') { $pwsByNum[$matches[1]] = $true } }
+    $pacByNum = @{}
+    foreach ($f in $pacFiles) { if ($f.Name -match '^(PAC\d+)') { $pacByNum[$matches[1]] = $true } }
+
+    foreach ($f in $pacFiles) {
+        if ($f.Name -notmatch '^(PAC\d+)') { continue }
+        $pacNum = $matches[1]
+        $pwsNum = $pairs[$pacNum]
+        if (-not $pwsNum) { $pwsNum = Get-PwsFromPdf $f.FullName }
+        if ($pwsNum -and -not $pwsByNum.ContainsKey($pwsNum)) {
+            Write-Host ("  ERROR: " + $pacNum + " is missing its PWS pair (" + $pwsNum + ")") -ForegroundColor Red
+            $missingPairs++
+        }
+    }
+
+    $pwsToPac = @{}
+    foreach ($e in $pairs.GetEnumerator()) { $pwsToPac[$e.Value] = $e.Key }
+    foreach ($f in $pwsFiles) {
+        if ($f.Name -notmatch '^(PWS\d+)') { continue }
+        $pwsNum = $matches[1]
+        $pacNum = $pwsToPac[$pwsNum]
+        if ($pacNum -and -not $pacByNum.ContainsKey($pacNum)) {
+            Write-Host ("  ERROR: " + $pwsNum + " is missing its PAC pair (" + $pacNum + ")") -ForegroundColor Red
+            $missingPairs++
+        }
+    }
+
     Invoke-GroupageCheck
     Invoke-PumpCheck
 
@@ -1272,6 +1303,8 @@ function Invoke-Rename {
     Write-Host ("     Already ok     : " + $skipped) -ForegroundColor DarkGray
     $failColor = if ($fail -gt 0) { "Red" } else { "DarkGray" }
     Write-Host ("     Errors         : " + $fail) -ForegroundColor $failColor
+    $pairColor = if ($missingPairs -gt 0) { "Red" } else { "DarkGray" }
+    Write-Host ("     Missing pairs  : " + $missingPairs) -ForegroundColor $pairColor
 }
 
 function Add-Stamp([string]$path, [string[]]$lines) {

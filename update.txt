@@ -1,4 +1,5 @@
-VERSION=1.0.0
+VERSION=1.0.1
+NOTE=Auto rename now warns about PAC/PWS documents missing their pair
 NOTE=Pump lists and control files from pick list PDFs
 NOTE=Groupage sheet is prefilled with customer and pick numbers
 NOTE=Loading animations and plain banner style
