@@ -2,7 +2,7 @@
 
 <img src="docs/01-main-menu.png" alt="DOC WIZARD" width="520"/>
 
-**DOC WIZARD** · v1.0.0
+**DOC WIZARD** · v1.0.1
 
 *A PowerShell-based tool that automates renaming, printing, filing and Excel generation for warehouse pick lists and delivery notes*
 
@@ -11,7 +11,7 @@
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6?logo=windows&logoColor=white)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1-5391FE?logo=powershell&logoColor=white)
 ![Excel](https://img.shields.io/badge/Excel-COM%20interop-217346?logo=microsoftexcel&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.0.1-blue)
 
 </div>
 
@@ -30,6 +30,7 @@
 - [Install](#install)
 - [Tech stack](#tech-stack)
 - [Project structure](#project-structure)
+- [Changelog](#changelog)
 
 ---
 
@@ -143,5 +144,21 @@ DOC WIZARD/
 
 `_doc_wizard_settings.txt`, `_doc_wizard_pairs.txt` and `_doc_wizard_printed.txt` are
 created at runtime and never leave the machine.
+
+---
+
+## Changelog
+
+### v1.0.1
+
+- Auto rename warns when a PAC document is missing its PWS pair, or vice versa
+
+### v1.0.0
+
+- Pump lists and control files built straight from pick list PDFs
+- Groupage sheet prefilled with customer and pick numbers
+- Loading animations and plain banner style
+
+---
 
 *Customer names and numbers in the screenshots are made up.*
