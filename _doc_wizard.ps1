@@ -599,6 +599,22 @@ function Invoke-GroupageCheck {
         if ($list.Count -lt 2) { continue }
         $display = $key -replace '_', ' '
 
+        $ext = ".xlsx"
+        $tpl = @(Get-ChildItem -LiteralPath $AppDir -Filter 'groupage_template.xls*' -ErrorAction SilentlyContinue)
+        if ($tpl.Count -eq 0) { $tpl = @(Get-ChildItem -LiteralPath $AppDir -Filter '*Groupage TEMPLATE.xls*' -ErrorAction SilentlyContinue) }
+        if ($tpl.Count -gt 0) { $ext = [System.IO.Path]::GetExtension($tpl[0].Name) }
+        $newName = (Get-Date -Format 'yyyy-MM-dd') + "_Groupage_" + $key + $ext
+        $newPath = Join-Path $WorkDir $newName
+
+        if (Test-Path -LiteralPath $newPath) {
+            Write-Host ""
+            Write-Host $light -ForegroundColor DarkCyan
+            Write-Host ("   GROUPAGE detected:  " + $display + "   (" + $list.Count + " pick lists)") -ForegroundColor Yellow
+            Write-Host ("     already created : " + $newName) -ForegroundColor DarkGray
+            Write-Host $light -ForegroundColor DarkCyan
+            continue
+        }
+
         Write-Host ""
         Write-Host $light -ForegroundColor DarkCyan
         Write-Host ("   GROUPAGE detected:  " + $display + "   (" + $list.Count + " pick lists)") -ForegroundColor Yellow
@@ -622,14 +638,6 @@ function Invoke-GroupageCheck {
                 Write-Host ("     ERROR marking " + $f.Name + ": " + $_.Exception.Message) -ForegroundColor Red
             }
         }
-
-        $tpl = @(Get-ChildItem -LiteralPath $AppDir -Filter 'groupage_template.xls*' -ErrorAction SilentlyContinue)
-        if ($tpl.Count -eq 0) { $tpl = @(Get-ChildItem -LiteralPath $AppDir -Filter '*Groupage TEMPLATE.xls*' -ErrorAction SilentlyContinue) }
-
-        $ext = ".xlsx"
-        if ($tpl.Count -gt 0) { $ext = [System.IO.Path]::GetExtension($tpl[0].Name) }
-        $newName = (Get-Date -Format 'yyyy-MM-dd') + "_Groupage_" + $key + $ext
-        $newPath = Join-Path $WorkDir $newName
 
         if ($tpl.Count -eq 0) {
             Write-Host "     Template not found in the DOC WIZARD folder." -ForegroundColor Yellow
@@ -2654,7 +2662,6 @@ try {
         Write-Host ("   Line " + $_.InvocationInfo.ScriptLineNumber + ":  " + $_.InvocationInfo.Line.Trim()) -ForegroundColor DarkGray
         Write-Host ""
     }
-    Write-Host "   Please send this message to Claude." -ForegroundColor DarkGray
     Write-Host "   Press any key to exit..." -ForegroundColor DarkGray
     [void][Console]::ReadKey($true)
 }
