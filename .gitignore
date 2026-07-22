@@ -1,0 +1,8 @@
+_doc_wizard_settings.txt
+_doc_wizard_pairs.txt
+_doc_wizard_printed.txt
+~$*
+*.tmp
+CLAUDE.md
+render.py
+shots.py
