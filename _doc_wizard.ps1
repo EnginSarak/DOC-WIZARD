@@ -606,11 +606,12 @@ function Invoke-GroupageCheck {
         $newName = (Get-Date -Format 'yyyy-MM-dd') + "_Groupage_" + $key + $ext
         $newPath = Join-Path $WorkDir $newName
 
-        if (Test-Path -LiteralPath $newPath) {
+        $existing = @(Get-ChildItem -LiteralPath $WorkDir -Filter ('*_Groupage_' + $key + '.xls*') -ErrorAction SilentlyContinue)
+        if ($existing.Count -gt 0) {
             Write-Host ""
             Write-Host $light -ForegroundColor DarkCyan
             Write-Host ("   GROUPAGE detected:  " + $display + "   (" + $list.Count + " pick lists)") -ForegroundColor Yellow
-            Write-Host ("     already created : " + $newName) -ForegroundColor DarkGray
+            Write-Host ("     already created : " + $existing[0].Name) -ForegroundColor DarkGray
             Write-Host $light -ForegroundColor DarkCyan
             continue
         }
@@ -707,7 +708,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '1.0.2'
+$script:AppVersion = '1.0.3'
 $script:UpdateOwner = 'EnginSarak'
 $script:UpdateRepo = 'DOC-WIZARD'
 $script:UpdateBranch = 'main'
