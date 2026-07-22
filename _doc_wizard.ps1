@@ -808,7 +808,7 @@ function Invoke-UpdateCheck {
     $info = Get-UpdateInfo
     Stop-Spin $spin
     if (-not $info) { return }
-    if ((Compare-Version $info.Version $script:AppVersion) -le 0) { return }
+    if ((Compare-Version $script:AppVersion $info.Version) -ge 0) { return }
 
     $items = @("Download and install now", "Skip this time", "", "Never mind")
     while ($true) {
