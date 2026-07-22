@@ -1,3 +1,0 @@
-OWNER=EnginSarak
-REPO=DOC-WIZARD
-BRANCH=main
