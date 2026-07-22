@@ -1,4 +1,7 @@
-VERSION=1.0.4
+VERSION=1.0.5
+NOTE=Move no longer crashes on a file that is open elsewhere
+NOTE=Manual "Check for updates" entry with a clear result
+NOTE=Update check now works behind a company proxy
 NOTE=Clearer message when a groupage already exists
 NOTE=Fixed groupage still being offered when it already exists
 NOTE=Fixed update check not detecting new versions
