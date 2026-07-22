@@ -704,7 +704,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '1.0.4'
+$script:AppVersion = '1.0.5'
 $script:UpdateOwner = 'EnginSarak'
 $script:UpdateRepo = 'DOC-WIZARD'
 $script:UpdateBranch = 'main'
@@ -725,10 +725,28 @@ function Get-UpdateBaseUrl {
     return ("https://raw.githubusercontent.com/" + $owner + "/" + $repo + "/" + $branch + "/")
 }
 
+function Get-ProxyParams([string]$url) {
+    $p = @{}
+    try {
+        $dest = [Uri]$url
+        $proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+        $pxUri = $proxy.GetProxy($dest)
+        if ($pxUri -and $pxUri.Host -ne $dest.Host) {
+            $p['Proxy'] = $pxUri.AbsoluteUri
+            $p['ProxyUseDefaultCredentials'] = $true
+        }
+    } catch { }
+    return $p
+}
+
 function Get-WebText([string]$url) {
     try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch { }
     $bust = "?t=" + [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-    $r = Invoke-WebRequest -Uri ($url + $bust) -UseBasicParsing -TimeoutSec 12
+    $full = $url + $bust
+    $params = @{ Uri = $full; UseBasicParsing = $true; TimeoutSec = 12 }
+    $px = Get-ProxyParams $full
+    foreach ($k in $px.Keys) { $params[$k] = $px[$k] }
+    $r = Invoke-WebRequest @params
     return [System.Text.Encoding]::UTF8.GetString($r.Content)
 }
 
@@ -776,7 +794,10 @@ function Install-Update($info) {
             $dest = Join-Path $tmp $f
             $destDir = Split-Path $dest -Parent
             if (-not (Test-Path -LiteralPath $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
-            Invoke-WebRequest -Uri $url -OutFile $dest -UseBasicParsing -TimeoutSec 60
+            $dlParams = @{ Uri = $url; OutFile = $dest; UseBasicParsing = $true; TimeoutSec = 60 }
+            $dlPx = Get-ProxyParams $url
+            foreach ($k in $dlPx.Keys) { $dlParams[$k] = $dlPx[$k] }
+            Invoke-WebRequest @dlParams
             Stop-Spin $spin
             Write-Host ("   downloaded : " + $f) -ForegroundColor DarkGray
         } catch {
@@ -808,14 +829,7 @@ function Install-Update($info) {
     return $true
 }
 
-function Invoke-UpdateCheck {
-    $spin = Start-Spin "checking for updates..."
-    $info = Get-UpdateInfo
-    Stop-Spin $spin
-    if (-not $info) { return }
-    if ((Compare-Version $script:AppVersion $info.Version) -ge 0) { return }
-
-    $items = @("Download and install now", "Skip this time", "", "Never mind")
+function Invoke-UpdatePrompt($info) {
     while ($true) {
         Clear-Host
         Show-Header
@@ -852,6 +866,44 @@ function Invoke-UpdateCheck {
         [void][Console]::ReadKey($true)
         return
     }
+}
+
+function Invoke-UpdateCheck {
+    $spin = Start-Spin "checking for updates..."
+    $info = Get-UpdateInfo
+    Stop-Spin $spin
+    if (-not $info) { return }
+    if ((Compare-Version $script:AppVersion $info.Version) -ge 0) { return }
+    Invoke-UpdatePrompt $info
+}
+
+function Invoke-UpdateCheckManual {
+    Clear-Host
+    Show-Header
+    Write-Host ""
+    $spin = Start-Spin "checking for updates..."
+    $info = Get-UpdateInfo
+    Stop-Spin $spin
+
+    if (-not $info) {
+        Write-Host $light -ForegroundColor DarkCyan
+        Write-Host "   Could not reach the update server." -ForegroundColor Red
+        Write-Host ""
+        Write-Host "   On a company network a firewall or proxy often blocks GitHub." -ForegroundColor Gray
+        Write-Host "   Ask IT to allow raw.githubusercontent.com, or copy the new files" -ForegroundColor Gray
+        Write-Host "   in by hand from the shared folder." -ForegroundColor Gray
+        Write-Host $light -ForegroundColor DarkCyan
+        return
+    }
+
+    if ((Compare-Version $script:AppVersion $info.Version) -ge 0) {
+        Write-Host $light -ForegroundColor DarkCyan
+        Write-Host ("   You already have the latest version (" + $script:AppVersion + ").") -ForegroundColor Green
+        Write-Host $light -ForegroundColor DarkCyan
+        return
+    }
+
+    Invoke-UpdatePrompt $info
 }
 
 function Get-PdfTjTokens([string]$path) {
@@ -2191,6 +2243,17 @@ function Select-Printer {
     return $items[$sel]
 }
 
+function Move-FileSafe([string]$src, [string]$dest) {
+    try {
+        Move-Item -LiteralPath $src -Destination $dest
+        return $true
+    } catch {
+        Write-Host ("  In use, not moved: " + [System.IO.Path]::GetFileName($src)) -ForegroundColor Red
+        Write-Host "  Close it in the PDF viewer or preview pane, then run Move again." -ForegroundColor DarkGray
+        return $false
+    }
+}
+
 function Move-PairInteractive([string]$root, [string]$startDir, [string]$title, [int]$month, [string]$year, [string]$siteText, [string[]]$files) {
     $cur = $startDir
     if (-not (Test-Path -LiteralPath $cur)) { $cur = $root }
@@ -2252,7 +2315,7 @@ function Move-PairInteractive([string]$root, [string]$startDir, [string]$title, 
                     $ok = $false
                     continue
                 }
-                Move-Item -LiteralPath $f -Destination $dest
+                if (-not (Move-FileSafe $f $dest)) { $ok = $false }
             }
             if ($ok) { Write-Host ("  Moved to: " + $cur) -ForegroundColor Green }
             return "MOVED"
@@ -2317,9 +2380,11 @@ function Move-ControlFile([string]$path) {
         Write-Host ("  Target exists, skipped: " + $name) -ForegroundColor DarkYellow
         return 0
     }
-    Move-Item -LiteralPath $path -Destination $target
-    Write-Host ("  Moved " + $name + " -> " + $dest) -ForegroundColor Green
-    return 1
+    if (Move-FileSafe $path $target) {
+        Write-Host ("  Moved " + $name + " -> " + $dest) -ForegroundColor Green
+        return 1
+    }
+    return 0
 }
 
 function Move-WpBundle([string]$title, [string[]]$paths) {
@@ -2345,9 +2410,10 @@ function Move-WpBundle([string]$title, [string[]]$paths) {
             Write-Host ("  Target exists, skipped: " + $name) -ForegroundColor DarkYellow
             continue
         }
-        Move-Item -LiteralPath $p -Destination $target
-        Write-Host ("  Moved " + $name + " -> " + $dest) -ForegroundColor Green
-        $n++
+        if (Move-FileSafe $p $target) {
+            Write-Host ("  Moved " + $name + " -> " + $dest) -ForegroundColor Green
+            $n++
+        }
     }
     return $n
 }
@@ -2603,7 +2669,7 @@ function Invoke-Settings([bool]$requireAll) {
     }
 }
 
-$mainItems = @("Auto rename/create documents", "Annotate WP documents", "Print", "Auto move to folders", "Settings", "", "Quit")
+$mainItems = @("Auto rename/create documents", "Annotate WP documents", "Print", "Auto move to folders", "Settings", "Check for updates", "", "Quit")
 
 $cfgWork = Get-Setting 'WORKDIR'
 if ($cfgWork -and (Test-Path -LiteralPath $cfgWork)) { $WorkDir = $cfgWork.TrimEnd('\') }
@@ -2639,6 +2705,7 @@ try {
             "Print"                 { Invoke-Print }
             "Auto move to folders"  { Invoke-Move }
             "Settings"              { Invoke-Settings $false }
+            "Check for updates"     { Invoke-UpdateCheckManual }
         }
 
         if (-not $script:SkipPause) {
