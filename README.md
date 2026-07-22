@@ -2,7 +2,7 @@
 
 <img src="docs/01-main-menu.png" alt="DOC WIZARD" width="520"/>
 
-**DOC WIZARD** · v1.0.6
+**DOC WIZARD** · v1.0.7
 
 *A PowerShell-based tool that automates renaming, printing, filing and Excel generation for warehouse pick lists and delivery notes*
 
@@ -11,7 +11,7 @@
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6?logo=windows&logoColor=white)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1-5391FE?logo=powershell&logoColor=white)
 ![Excel](https://img.shields.io/badge/Excel-COM%20interop-217346?logo=microsoftexcel&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.0.6-blue)
+![Version](https://img.shields.io/badge/version-1.0.7-blue)
 
 </div>
 
@@ -101,9 +101,10 @@ all of it — run it before handing the folder to someone else.
 
 <img src="docs/07-update.png" width="620"/>
 
-Checks this repository on every start. If a newer version exists it shows the changelog
-and asks before touching anything. No prompt if offline or unreachable, no personal
-settings ever overwritten.
+Run "Check for updates" from the menu to look at this repository. If a newer version
+exists it shows the changelog and asks before touching anything, and never overwrites
+personal settings. On a locked-down network where the server is unreachable it says so;
+in that case the files are replaced by hand.
 
 ---
 
@@ -148,6 +149,10 @@ created at runtime and never leave the machine.
 ---
 
 ## Changelog
+
+### v1.0.7
+
+- Update check is now started from the menu instead of automatically, so there is no wait at startup on networks that block the server
 
 ### v1.0.6
 
