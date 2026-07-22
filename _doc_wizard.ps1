@@ -715,7 +715,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '0.0.2'
+$script:AppVersion = '0.0.3'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -2337,7 +2337,7 @@ function Invoke-Move {
                 $detail = "$pwsNum + $pacNum"
             }
             $paths += $f.FullName
-            if ($sord) { $detail = $detail + "   " + $sord }
+            if ($sord) { $detail = $detail + " " + [char]0x2013 + " " + $sord }
             $delEntries.Add(@{ Detail = $detail; Paths = $paths; Src = $f })
         }
         foreach ($num in ($pwsByNum.Keys | Sort-Object)) {
@@ -2345,7 +2345,7 @@ function Invoke-Move {
                 $f = $pwsByNum[$num]
                 $sord = if ($f.Name -match 'SORD\d+-\d+') { $matches[0] } else { "" }
                 $detail = $num
-                if ($sord) { $detail = $detail + "   " + $sord }
+                if ($sord) { $detail = $detail + " " + [char]0x2013 + " " + $sord }
                 $delEntries.Add(@{ Detail = $detail; Paths = @($f.FullName); Src = $f })
             }
         }
