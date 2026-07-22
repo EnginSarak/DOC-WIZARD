@@ -74,10 +74,10 @@ $CountryNames = @{
     'IT' = @('italien', 'italy', 'italia')
     'ES' = @('spanien', 'spain', 'espana')
     'PL' = @('polen', 'poland', 'polska')
-    'DK' = @('danemark', 'denmark')
-    'SE' = @('schweden', 'sweden')
-    'NO' = @('norwegen', 'norway')
-    'FI' = @('finnland', 'finland')
+    'DK' = @('danemark', 'denmark', 'danmark')
+    'SE' = @('schweden', 'sweden', 'sverige')
+    'NO' = @('norwegen', 'norway', 'norge')
+    'FI' = @('finnland', 'finland', 'suomi')
     'PT' = @('portugal')
     'GB' = @('grossbritannien', 'united kingdom', 'england', 'britain')
     'IE' = @('irland', 'ireland')
@@ -704,7 +704,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '1.0.5'
+$script:AppVersion = '1.0.6'
 $script:UpdateOwner = 'EnginSarak'
 $script:UpdateRepo = 'DOC-WIZARD'
 $script:UpdateBranch = 'main'
@@ -1902,9 +1902,37 @@ function Get-DeliveryInfo([string]$path) {
         [void]$siteSb.Append($val)
     }
     $siteText = $siteSb.ToString()
-    $country = Get-CountryCode $siteText
 
-    return @{ Customer = $customer; Month = $month; Year = $year; SiteText = $siteText; Country = $country }
+    $destText = Get-AddressWindow $t @('Destination', 'Ship To', 'Deliver To', 'Sold To', 'Customer')
+    $country = Get-CountryCode $destText
+    if (-not $country) { $country = Get-CountryCode $siteText }
+
+    $location = $destText
+    if ($customer -and $location.StartsWith($customer)) { $location = $location.Substring($customer.Length).Trim() }
+    $location = ([regex]::Replace($location, '\s+[A-Za-z]{2}\s*$', '')).Trim()
+
+    return @{ Customer = $customer; Month = $month; Year = $year; SiteText = $siteText; Country = $country; DestText = $destText; Location = $location }
+}
+
+function Get-AddressWindow([string]$t, [string[]]$labels) {
+    foreach ($lab in $labels) {
+        $li = $t.IndexOf($lab + ') Tj')
+        if ($li -lt 0) { continue }
+        $seg = $t.Substring($li, [math]::Min(1200, $t.Length - $li))
+        $sb = New-Object System.Text.StringBuilder
+        $count = 0
+        foreach ($m in [regex]::Matches($seg, '\(((?:[^()\\]|\\.)*)\)\s*Tj')) {
+            $v = ($m.Groups[1].Value -replace '\\\(', '(' -replace '\\\)', ')').Trim()
+            if (-not $v) { continue }
+            if ($count -gt 0) { [void]$sb.Append("  ") }
+            [void]$sb.Append($v)
+            $count++
+            if ($count -ge 6) { break }
+        }
+        $r = $sb.ToString().Trim()
+        if ($r) { return $r }
+    }
+    return ""
 }
 
 function Normalize-Name([string]$n) {
@@ -2007,6 +2035,20 @@ function Get-CountryCode([string]$siteText) {
         if ($CountryNames.ContainsKey($mm.Groups[1].Value)) { return $mm.Groups[1].Value }
     }
     return ""
+}
+
+function Get-CountryLabel([string]$code) {
+    if (-not $code) { return "(not found in document)" }
+    $name = ""
+    if ($CountryNames.ContainsKey($code)) {
+        $list = $CountryNames[$code]
+        if ($list.Count -ge 2) { $name = $list[1] } else { $name = $list[0] }
+    }
+    if ($name) {
+        $name = $name.Substring(0, 1).ToUpper() + $name.Substring(1)
+        return ($code + " (" + $name + ")")
+    }
+    return $code
 }
 
 function Score-Country([string]$folderName, [string]$code) {
@@ -2254,16 +2296,28 @@ function Move-FileSafe([string]$src, [string]$dest) {
     }
 }
 
-function Move-PairInteractive([string]$root, [string]$startDir, [string]$title, [int]$month, [string]$year, [string]$siteText, [string[]]$files) {
+function Move-PairInteractive([string]$root, [string]$startDir, [string]$title, [hashtable]$info, [string[]]$files) {
+    $month = $info.Month
+    $year = $info.Year
+    $siteText = $info.SiteText
     $cur = $startDir
     if (-not (Test-Path -LiteralPath $cur)) { $cur = $root }
     $suggest = $MonthsDE[$month - 1] + " " + $year
+
+    $locShow = $info.Location
+    if ($locShow.Length -gt 52) { $locShow = $locShow.Substring(0, 52) }
 
     while ($true) {
         $subs = @(Get-ChildItem -LiteralPath $cur -Directory -ErrorAction SilentlyContinue | Sort-Object Name)
 
         $entries = New-Object System.Collections.Generic.List[object]
         $entries.Add(@{ Text = $title; Header = $true })
+        $entries.Add(@{ Text = ""; Header = $true })
+        $entries.Add(@{ Text = "From the document:"; Header = $true })
+        $entries.Add(@{ Text = ("  Customer: " + $info.Customer); Header = $true })
+        $entries.Add(@{ Text = ("  Location: " + $locShow); Header = $true })
+        $entries.Add(@{ Text = ("  Country : " + (Get-CountryLabel $info.Country)); Header = $true })
+        $entries.Add(@{ Text = ""; Header = $true })
         $entries.Add(@{ Text = ("Current: " + $cur); Header = $true })
         $entries.Add(@{ Text = ""; Header = $true })
         $entries.Add(@{ Text = "[ Move here ]"; Header = $false; Act = "SELECT" })
@@ -2563,10 +2617,10 @@ function Invoke-Move {
                 $info.Year = (Get-Date).Year.ToString()
             }
             $monthLabel = $MonthsDE[$info.Month - 1] + " " + $info.Year
-            $title = $d.Label + "    Customer: " + $info.Customer + "    Date: " + $monthLabel
+            $title = $d.Label + "    Date: " + $monthLabel
             $start = Resolve-StartFolder $script:__root $info
             Stop-Spin $dspin
-            $res = Move-PairInteractive $script:__root $start $title $info.Month $info.Year $info.SiteText $d.Paths
+            $res = Move-PairInteractive $script:__root $start $title $info $d.Paths
             if ($res -eq "MOVED") { $did = $d.Paths.Count }
         }
 

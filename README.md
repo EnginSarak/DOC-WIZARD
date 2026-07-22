@@ -2,7 +2,7 @@
 
 <img src="docs/01-main-menu.png" alt="DOC WIZARD" width="520"/>
 
-**DOC WIZARD** · v1.0.5
+**DOC WIZARD** · v1.0.6
 
 *A PowerShell-based tool that automates renaming, printing, filing and Excel generation for warehouse pick lists and delivery notes*
 
@@ -11,7 +11,7 @@
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6?logo=windows&logoColor=white)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1-5391FE?logo=powershell&logoColor=white)
 ![Excel](https://img.shields.io/badge/Excel-COM%20interop-217346?logo=microsoftexcel&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.0.5-blue)
+![Version](https://img.shields.io/badge/version-1.0.6-blue)
 
 </div>
 
@@ -148,6 +148,11 @@ created at runtime and never leave the machine.
 ---
 
 ## Changelog
+
+### v1.0.6
+
+- Move screen shows the customer, location and country read from the document, so you can verify before filing
+- Country is now read from the delivery address instead of the whole document, and native country names (Sverige, Norge, ...) are recognised
 
 ### v1.0.5
 
