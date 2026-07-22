@@ -715,7 +715,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '0.0.1'
+$script:AppVersion = '0.0.2'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -2330,23 +2330,23 @@ function Invoke-Move {
             $pwsNum = $pairs[$pacNum]
             if (-not $pwsNum) { $pwsNum = Get-PwsFromPdf $f.FullName }
             $paths = @()
-            $label = $pacNum
+            $detail = $pacNum
             if ($pwsNum -and $pwsByNum.ContainsKey($pwsNum)) {
                 $paths += $pwsByNum[$pwsNum].FullName
                 $usedPws[$pwsNum] = $true
-                $label = "$pwsNum + $pacNum"
+                $detail = "$pwsNum + $pacNum"
             }
             $paths += $f.FullName
-            if ($sord) { $label = $label + "   (" + $sord + ")" }
-            $delEntries.Add(@{ Label = $label; Paths = $paths; Src = $f })
+            if ($sord) { $detail = $detail + "   " + $sord }
+            $delEntries.Add(@{ Detail = $detail; Paths = $paths; Src = $f })
         }
         foreach ($num in ($pwsByNum.Keys | Sort-Object)) {
             if (-not $usedPws[$num]) {
                 $f = $pwsByNum[$num]
                 $sord = if ($f.Name -match 'SORD\d+-\d+') { $matches[0] } else { "" }
-                $label = $num
-                if ($sord) { $label = $label + "   (" + $sord + ")" }
-                $delEntries.Add(@{ Label = $label; Paths = @($f.FullName); Src = $f })
+                $detail = $num
+                if ($sord) { $detail = $detail + "   " + $sord }
+                $delEntries.Add(@{ Detail = $detail; Paths = @($f.FullName); Src = $f })
             }
         }
 
@@ -2379,10 +2379,12 @@ function Invoke-Move {
         $entries.Add(@{ Text = "Delivery documents   (to customer folder)"; Header = $true })
         if ($delGroups.Count -eq 0) { $entries.Add(@{ Text = "(none)"; Header = $true }) }
         foreach ($g in $delGroups) {
+            $cust = $g.Info.Customer
+            if (-not $cust) { $cust = "(unknown customer)" }
             if ($g.Count -gt 1) {
-                $lbl = $g.Info.Customer + "   (" + $g.Count + " deliveries, " + $g.Paths.Count + " files)"
+                $lbl = $cust + "   (" + $g.Paths.Count + " files)"
             } else {
-                $lbl = $g.Members[0].Label
+                $lbl = $cust + "   (" + $g.Members[0].Detail + ")"
             }
             $entries.Add(@{ Text = $lbl; Header = $false; Act = 'DEL'; Data = $g })
         }
@@ -2448,10 +2450,12 @@ function Invoke-Move {
             $g = $e.Data
             $info = $g.Info
             $monthLabel = $MonthsDE[$info.Month - 1] + " " + $info.Year
+            $cust = $info.Customer
+            if (-not $cust) { $cust = "(unknown customer)" }
             if ($g.Count -gt 1) {
-                $title = $g.Count + " deliveries (" + $g.Paths.Count + " files)    Date: " + $monthLabel
+                $title = $cust + "   (" + $g.Paths.Count + " files)    Date: " + $monthLabel
             } else {
-                $title = $g.Members[0].Label + "    Date: " + $monthLabel
+                $title = $cust + "   (" + $g.Members[0].Detail + ")    Date: " + $monthLabel
             }
             $start = Resolve-StartFolder $script:__root $info
             $res = Move-PairInteractive $script:__root $start $title $info $g.Paths
