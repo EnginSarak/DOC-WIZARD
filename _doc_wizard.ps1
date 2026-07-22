@@ -32,16 +32,27 @@ function Get-BannerArt {
     if ($v -match '^\d+$') { $idx = [int]$v }
     if ($idx -lt 0 -or $idx -ge $BannerStyles.Count) { $idx = 0 }
     $st = $BannerStyles[$idx]
-    $script:BannerCache = @{
-        Doc  = ([System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($st.D)) -split "`n")
-        Wiz  = ([System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($st.W)) -split "`n")
-        Name = $st.N
+    $doc = ([System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($st.D)) -split "`n")
+    $wiz = ([System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($st.W)) -split "`n")
+    $w = 0
+    $cnt = [math]::Min($doc.Count, $wiz.Count)
+    for ($i = 0; $i -lt $cnt; $i++) {
+        $lw = 2 + $doc[$i].Length + 1 + ($wiz[$i].TrimEnd()).Length
+        if ($lw -gt $w) { $w = $lw }
     }
+    $byline = ("         Version " + $script:AppVersion + "  |  by Engin Sarak").Length
+    if ($byline -gt $w) { $w = $byline }
+    if ($st.N -eq 'Plain') {
+        $bar = "  " + ([string][char]0x2550 * 54)
+    } else {
+        $bw = $w - 2
+        if ($bw -lt 10) { $bw = 10 }
+        $bar = "  " + ([string][char]0x2550 * $bw)
+    }
+    $script:BannerCache = @{ Doc = $doc; Wiz = $wiz; Name = $st.N; Width = $w; Bar = $bar }
     return $script:BannerCache
 }
 
-$doubl = "  " + ([string][char]0x2550 * 68)
-$plainBar = "  " + ([string][char]0x2550 * 45)
 $light = "  " + ([string][char]0x2500 * 68)
 
 $MonthsDE = @('Januar', 'Februar', ("M" + [char]0x00E4 + "rz"), 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember')
@@ -124,15 +135,15 @@ function Show-Header {
     $art = Get-BannerArt
     if ($art.Name -eq 'Plain') {
         Write-Host ""
-        Write-Host $plainBar -ForegroundColor Magenta
+        Write-Host $art.Bar -ForegroundColor Magenta
         Write-Host -NoNewline "  DOC" -ForegroundColor Cyan
         Write-Host -NoNewline " WIZARD" -ForegroundColor Yellow
         Write-Host ("   Version " + $script:AppVersion + "  |  by Engin Sarak") -ForegroundColor Red
-        Write-Host $plainBar -ForegroundColor Magenta
+        Write-Host $art.Bar -ForegroundColor Magenta
         return
     }
     Write-Host ""
-    Write-Host $doubl -ForegroundColor Magenta
+    Write-Host $art.Bar -ForegroundColor Magenta
     Write-Host ""
     for ($i = 0; $i -lt $art.Doc.Count; $i++) {
         Write-Host -NoNewline ("  " + $art.Doc[$i]) -ForegroundColor Cyan
@@ -140,7 +151,7 @@ function Show-Header {
     }
     Write-Host ""
     Write-Host ("         Version " + $script:AppVersion + "  |  by Engin Sarak") -ForegroundColor Red
-    Write-Host $doubl -ForegroundColor Magenta
+    Write-Host $art.Bar -ForegroundColor Magenta
 }
 
 $script:CanPosition = $false
@@ -156,20 +167,20 @@ function Get-HeaderRows {
     $art = Get-BannerArt
     if ($art.Name -eq 'Plain') {
         $rows.Add(@(@{ T = ""; F = "Gray" }))
-        $rows.Add(@(@{ T = $plainBar; F = "Magenta" }))
+        $rows.Add(@(@{ T = $art.Bar; F = "Magenta" }))
         $rows.Add(@(@{ T = "  DOC"; F = "Cyan" }, @{ T = " WIZARD"; F = "Yellow" }, @{ T = ("   Version " + $script:AppVersion + "  |  by Engin Sarak"); F = "Red" }))
-        $rows.Add(@(@{ T = $plainBar; F = "Magenta" }))
+        $rows.Add(@(@{ T = $art.Bar; F = "Magenta" }))
         return ,$rows
     }
     $rows.Add(@(@{ T = ""; F = "Gray" }))
-    $rows.Add(@(@{ T = $doubl; F = "Magenta" }))
+    $rows.Add(@(@{ T = $art.Bar; F = "Magenta" }))
     $rows.Add(@(@{ T = ""; F = "Gray" }))
     for ($i = 0; $i -lt $art.Doc.Count; $i++) {
         $rows.Add(@(@{ T = ("  " + $art.Doc[$i]); F = "Cyan" }, @{ T = (" " + $art.Wiz[$i]); F = "Yellow" }))
     }
     $rows.Add(@(@{ T = ""; F = "Gray" }))
     $rows.Add(@(@{ T = ("         Version " + $script:AppVersion + "  |  by Engin Sarak"); F = "Red" }))
-    $rows.Add(@(@{ T = $doubl; F = "Magenta" }))
+    $rows.Add(@(@{ T = $art.Bar; F = "Magenta" }))
     return ,$rows
 }
 
@@ -704,198 +715,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '1.0.7'
-$script:UpdateOwner = 'EnginSarak'
-$script:UpdateRepo = 'DOC-WIZARD'
-$script:UpdateBranch = 'main'
-
-function Get-UpdateBaseUrl {
-    $owner = $script:UpdateOwner
-    $repo = $script:UpdateRepo
-    $branch = $script:UpdateBranch
-    $cfg = Join-Path $AppDir '_doc_wizard_update.txt'
-    if (Test-Path -LiteralPath $cfg) {
-        foreach ($l in (Get-Content -LiteralPath $cfg)) {
-            $t = $l.Trim()
-            if ($t -match '^OWNER=(.+)$') { $owner = $matches[1].Trim() }
-            if ($t -match '^REPO=(.+)$') { $repo = $matches[1].Trim() }
-            if ($t -match '^BRANCH=(.+)$') { $branch = $matches[1].Trim() }
-        }
-    }
-    return ("https://raw.githubusercontent.com/" + $owner + "/" + $repo + "/" + $branch + "/")
-}
-
-function Get-ProxyParams([string]$url) {
-    $p = @{}
-    try {
-        $dest = [Uri]$url
-        $proxy = [System.Net.WebRequest]::GetSystemWebProxy()
-        $pxUri = $proxy.GetProxy($dest)
-        if ($pxUri -and $pxUri.Host -ne $dest.Host) {
-            $p['Proxy'] = $pxUri.AbsoluteUri
-            $p['ProxyUseDefaultCredentials'] = $true
-        }
-    } catch { }
-    return $p
-}
-
-function Get-WebText([string]$url) {
-    try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch { }
-    $bust = "?t=" + [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-    $full = $url + $bust
-    $params = @{ Uri = $full; UseBasicParsing = $true; TimeoutSec = 12 }
-    $px = Get-ProxyParams $full
-    foreach ($k in $px.Keys) { $params[$k] = $px[$k] }
-    $r = Invoke-WebRequest @params
-    return [System.Text.Encoding]::UTF8.GetString($r.Content)
-}
-
-function Compare-Version([string]$a, [string]$b) {
-    $pa = @($a -split '\.' | ForEach-Object { [int]($_ -replace '\D', '0') })
-    $pb = @($b -split '\.' | ForEach-Object { [int]($_ -replace '\D', '0') })
-    for ($i = 0; $i -lt 4; $i++) {
-        $x = 0; $y = 0
-        if ($i -lt $pa.Count) { $x = $pa[$i] }
-        if ($i -lt $pb.Count) { $y = $pb[$i] }
-        if ($x -gt $y) { return 1 }
-        if ($x -lt $y) { return -1 }
-    }
-    return 0
-}
-
-function Get-UpdateInfo {
-    $base = Get-UpdateBaseUrl
-    try { $txt = Get-WebText ($base + 'update.txt') } catch { return $null }
-    if (-not $txt) { return $null }
-
-    $info = @{ Version = ''; Files = (New-Object System.Collections.Generic.List[string]); Notes = (New-Object System.Collections.Generic.List[string]); Base = $base }
-    foreach ($l in ($txt -split "`n")) {
-        $t = $l.Trim()
-        if (-not $t) { continue }
-        if ($t -match '^VERSION=(.+)$') { $info.Version = $matches[1].Trim() }
-        elseif ($t -match '^FILE=(.+)$') { $info.Files.Add($matches[1].Trim()) }
-        elseif ($t -match '^NOTE=(.+)$') { $info.Notes.Add($matches[1].Trim()) }
-    }
-    if (-not $info.Version) { return $null }
-    return $info
-}
-
-function Install-Update($info) {
-    $tmp = Join-Path $env:TEMP ("docwizard_update_" + [Guid]::NewGuid().ToString('N'))
-    New-Item -ItemType Directory -Path $tmp -Force | Out-Null
-    $ok = $true
-
-    try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch { }
-
-    foreach ($f in $info.Files) {
-        $spin = Start-Spin ("downloading " + $f + "...")
-        try {
-            $url = $info.Base + ($f -replace ' ', '%20') + "?t=" + [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-            $dest = Join-Path $tmp $f
-            $destDir = Split-Path $dest -Parent
-            if (-not (Test-Path -LiteralPath $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
-            $dlParams = @{ Uri = $url; OutFile = $dest; UseBasicParsing = $true; TimeoutSec = 60 }
-            $dlPx = Get-ProxyParams $url
-            foreach ($k in $dlPx.Keys) { $dlParams[$k] = $dlPx[$k] }
-            Invoke-WebRequest @dlParams
-            Stop-Spin $spin
-            Write-Host ("   downloaded : " + $f) -ForegroundColor DarkGray
-        } catch {
-            Stop-Spin $spin
-            Write-Host ("   FAILED     : " + $f + "  (" + $_.Exception.Message + ")") -ForegroundColor Red
-            $ok = $false
-        }
-    }
-
-    if (-not $ok) {
-        Write-Host ""
-        Write-Host "   Update aborted, nothing was changed." -ForegroundColor Yellow
-        try { Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue } catch { }
-        return $false
-    }
-
-    Write-Host ""
-    foreach ($f in $info.Files) {
-        $srcF = Join-Path $tmp $f
-        $dstF = Join-Path $AppDir $f
-        try {
-            Copy-Item -LiteralPath $srcF -Destination $dstF -Force
-            Write-Host ("   updated    : " + $f) -ForegroundColor Green
-        } catch {
-            Write-Host ("   locked     : " + $f + "  (close it and run the update again)") -ForegroundColor Yellow
-        }
-    }
-    try { Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue } catch { }
-    return $true
-}
-
-function Invoke-UpdatePrompt($info) {
-    while ($true) {
-        Clear-Host
-        Show-Header
-        Write-Host ""
-        Write-Host $light -ForegroundColor DarkCyan
-        Write-Host ("   UPDATE AVAILABLE:   " + $script:AppVersion + "   ->   " + $info.Version) -ForegroundColor Yellow
-        Write-Host ""
-        foreach ($n in $info.Notes) { Write-Host ("     " + $n) -ForegroundColor Gray }
-        if ($info.Notes.Count -gt 0) { Write-Host "" }
-        Write-Host $light -ForegroundColor DarkCyan
-        Write-Host ""
-        $ans = Read-Host "   Install the update now? (Y/N)"
-        if (-not ($ans -match '^\s*[yj]')) { return }
-
-        Clear-Host
-        Show-Header
-        Write-Host ""
-        if (Install-Update $info) {
-            Write-Host ""
-            Write-Host $light -ForegroundColor DarkCyan
-            Write-Host ("   Updated to version " + $info.Version + ".") -ForegroundColor Green
-            Write-Host "   DOC WIZARD needs to restart now." -ForegroundColor Gray
-            Write-Host ""
-            Write-Host "   Press any key to restart..." -ForegroundColor DarkGray
-            [void][Console]::ReadKey($true)
-            $bat = Join-Path $AppDir 'DOC WIZARD.bat'
-            if (Test-Path -LiteralPath $bat) {
-                Start-Process -FilePath $bat
-            }
-            exit
-        }
-        Write-Host ""
-        Write-Host "   Press any key to continue without updating..." -ForegroundColor DarkGray
-        [void][Console]::ReadKey($true)
-        return
-    }
-}
-
-function Invoke-UpdateCheckManual {
-    Clear-Host
-    Show-Header
-    Write-Host ""
-    $spin = Start-Spin "checking for updates..."
-    $info = Get-UpdateInfo
-    Stop-Spin $spin
-
-    if (-not $info) {
-        Write-Host $light -ForegroundColor DarkCyan
-        Write-Host "   Could not reach the update server." -ForegroundColor Red
-        Write-Host ""
-        Write-Host "   On a company network a firewall or proxy often blocks GitHub." -ForegroundColor Gray
-        Write-Host "   Ask IT to allow raw.githubusercontent.com, or copy the new files" -ForegroundColor Gray
-        Write-Host "   in by hand from the shared folder." -ForegroundColor Gray
-        Write-Host $light -ForegroundColor DarkCyan
-        return
-    }
-
-    if ((Compare-Version $script:AppVersion $info.Version) -ge 0) {
-        Write-Host $light -ForegroundColor DarkCyan
-        Write-Host ("   You already have the latest version (" + $script:AppVersion + ").") -ForegroundColor Green
-        Write-Host $light -ForegroundColor DarkCyan
-        return
-    }
-
-    Invoke-UpdatePrompt $info
-}
+$script:AppVersion = '0.0.1'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -2530,6 +2350,26 @@ function Invoke-Move {
             }
         }
 
+        foreach ($d in $delEntries) {
+            $di = Get-DeliveryInfo $d.Src.FullName
+            if (-not $di.Month -or -not $di.Year) {
+                $di.Month = (Get-Date).Month
+                $di.Year = (Get-Date).Year.ToString()
+            }
+            $d.Info = $di
+            $d.Key = (Normalize-Name $di.Customer) + '|' + (Normalize-Name $di.Location) + '|' + $di.Country
+        }
+        $delGroups = New-Object System.Collections.Generic.List[object]
+        $seenKey = @{}
+        foreach ($d in $delEntries) {
+            if ($seenKey.ContainsKey($d.Key)) { continue }
+            $seenKey[$d.Key] = $true
+            $members = @($delEntries | Where-Object { $_.Key -eq $d.Key })
+            $allPaths = @()
+            foreach ($m in $members) { $allPaths += $m.Paths }
+            $delGroups.Add(@{ Members = $members; Paths = $allPaths; Info = $d.Info; Count = $members.Count })
+        }
+
         $groupages = Get-ActiveGroupages
         $covered = @{}
         foreach ($g in $groupages) { foreach ($n in $g.Names) { $covered[$n] = $true } }
@@ -2537,9 +2377,14 @@ function Invoke-Move {
 
         $entries = New-Object System.Collections.Generic.List[object]
         $entries.Add(@{ Text = "Delivery documents   (to customer folder)"; Header = $true })
-        if ($delEntries.Count -eq 0) { $entries.Add(@{ Text = "(none)"; Header = $true }) }
-        foreach ($d in $delEntries) {
-            $entries.Add(@{ Text = $d.Label; Header = $false; Act = 'DEL'; Data = $d })
+        if ($delGroups.Count -eq 0) { $entries.Add(@{ Text = "(none)"; Header = $true }) }
+        foreach ($g in $delGroups) {
+            if ($g.Count -gt 1) {
+                $lbl = $g.Info.Customer + "   (" + $g.Count + " deliveries, " + $g.Paths.Count + " files)"
+            } else {
+                $lbl = $g.Members[0].Label
+            }
+            $entries.Add(@{ Text = $lbl; Header = $false; Act = 'DEL'; Data = $g })
         }
         $entries.Add(@{ Text = ""; Header = $true })
         $entries.Add(@{ Text = "Warehouse picks   (to pick list / noch zu drucken)"; Header = $true })
@@ -2600,19 +2445,17 @@ function Invoke-Move {
         } elseif ($e.Act -eq 'WP') {
             $did = Move-WpBundle $e.Title $e.Paths
         } else {
-            $d = $e.Data
-            $dspin = Start-Spin ("analysing " + $d.Src.Name + "...")
-            $info = Get-DeliveryInfo $d.Src.FullName
-            if (-not $info.Month -or -not $info.Year) {
-                $info.Month = (Get-Date).Month
-                $info.Year = (Get-Date).Year.ToString()
-            }
+            $g = $e.Data
+            $info = $g.Info
             $monthLabel = $MonthsDE[$info.Month - 1] + " " + $info.Year
-            $title = $d.Label + "    Date: " + $monthLabel
+            if ($g.Count -gt 1) {
+                $title = $g.Count + " deliveries (" + $g.Paths.Count + " files)    Date: " + $monthLabel
+            } else {
+                $title = $g.Members[0].Label + "    Date: " + $monthLabel
+            }
             $start = Resolve-StartFolder $script:__root $info
-            Stop-Spin $dspin
-            $res = Move-PairInteractive $script:__root $start $title $info $d.Paths
-            if ($res -eq "MOVED") { $did = $d.Paths.Count }
+            $res = Move-PairInteractive $script:__root $start $title $info $g.Paths
+            if ($res -eq "MOVED") { $did = $g.Paths.Count }
         }
 
         if ($did -gt 0) {
@@ -2714,7 +2557,7 @@ function Invoke-Settings([bool]$requireAll) {
     }
 }
 
-$mainItems = @("Auto rename/create documents", "Annotate WP documents", "Print", "Auto move to folders", "Settings", "Check for updates", "", "Quit")
+$mainItems = @("Auto rename/create documents", "Annotate WP documents", "Print", "Auto move to folders", "Settings", "", "Quit")
 
 $cfgWork = Get-Setting 'WORKDIR'
 if ($cfgWork -and (Test-Path -LiteralPath $cfgWork)) { $WorkDir = $cfgWork.TrimEnd('\') }
@@ -2748,7 +2591,6 @@ try {
             "Print"                 { Invoke-Print }
             "Auto move to folders"  { Invoke-Move }
             "Settings"              { Invoke-Settings $false }
-            "Check for updates"     { Invoke-UpdateCheckManual }
         }
 
         if (-not $script:SkipPause) {

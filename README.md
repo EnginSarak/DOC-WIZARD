@@ -2,7 +2,7 @@
 
 <img src="docs/01-main-menu.png" alt="DOC WIZARD" width="520"/>
 
-**DOC WIZARD** · v1.0.7
+**DOC WIZARD** · v0.0.1
 
 *A PowerShell-based tool that automates renaming, printing, filing and Excel generation for warehouse pick lists and delivery notes*
 
@@ -11,7 +11,7 @@
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6?logo=windows&logoColor=white)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1-5391FE?logo=powershell&logoColor=white)
 ![Excel](https://img.shields.io/badge/Excel-COM%20interop-217346?logo=microsoftexcel&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.0.7-blue)
+![Version](https://img.shields.io/badge/version-0.0.1-blue)
 
 </div>
 
@@ -26,11 +26,9 @@
   - [Print](#print)
   - [Move to folders](#move-to-folders)
   - [Settings](#settings)
-  - [Self-update](#self-update)
 - [Install](#install)
 - [Tech stack](#tech-stack)
 - [Project structure](#project-structure)
-- [Changelog](#changelog)
 
 ---
 
@@ -88,7 +86,10 @@ go out twice by accident.
 Each entry moves the full bundle — pick list with its pump list, groupage with its
 sheet. Control files get their own section and go to the pump control folder, not the
 print queue. Delivery documents are routed by reading customer, country and date out of
-the PDF and suggesting the matching month folder.
+the PDF and suggesting the matching month folder; the customer, location and country
+found in the document are shown so the target can be checked before filing. Deliveries
+going to the same customer, location and country are grouped into one entry and moved
+together.
 
 ### Settings
 
@@ -96,15 +97,6 @@ the PDF and suggesting the matching month folder.
 
 Folders and printer are asked once and stored next to the script. `reset.bat` clears
 all of it — run it before handing the folder to someone else.
-
-### Self-update
-
-<img src="docs/07-update.png" width="620"/>
-
-Run "Check for updates" from the menu to look at this repository. If a newer version
-exists it shows the changelog and asks before touching anything, and never overwrites
-personal settings. On a locked-down network where the server is unreachable it says so;
-in that case the files are replaced by hand.
 
 ---
 
@@ -125,7 +117,6 @@ First start asks for folders and printer once.
 | Runtime | PowerShell 5.1, Windows Console API |
 | Spreadsheets | Excel COM interop |
 | PDF parsing | Manual PDF stream inflate + text-token extraction, no external library |
-| Update channel | Raw file diff against this repo's `main` branch |
 
 ---
 
@@ -145,42 +136,6 @@ DOC WIZARD/
 
 `_doc_wizard_settings.txt`, `_doc_wizard_pairs.txt` and `_doc_wizard_printed.txt` are
 created at runtime and never leave the machine.
-
----
-
-## Changelog
-
-### v1.0.7
-
-- Update check is now started from the menu instead of automatically, so there is no wait at startup on networks that block the server
-
-### v1.0.6
-
-- Move screen shows the customer, location and country read from the document, so you can verify before filing
-- Country is now read from the delivery address instead of the whole document, and native country names (Sverige, Norge, ...) are recognised
-
-### v1.0.5
-
-- Moving a document no longer crashes when a file is open in another program
-- New "Check for updates" menu entry that reports the result
-- Update check now works behind a company proxy
-
-### v1.0.4
-
-- Clearer message when a groupage already exists
-
-### v1.0.3
-
-- Groupage is no longer offered again when the file already exists from an earlier day
-
-### v1.0.2
-
-- Fixed update check not detecting new versions
-- Fixed groupage prompt appearing when already created
-
-### v1.0.1
-
-- Auto rename warns when a PAC document is missing its PWS pair, or vice versa
 
 ---
 
