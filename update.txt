@@ -1,4 +1,5 @@
-VERSION=1.0.6
+VERSION=1.0.7
+NOTE=Update check is now manual only, no wait at startup
 NOTE=Move screen now shows customer, location and country from the document
 NOTE=Country is read from the delivery address, native names recognised
 NOTE=Move no longer crashes on a file that is open elsewhere

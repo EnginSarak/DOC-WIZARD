@@ -704,7 +704,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '1.0.6'
+$script:AppVersion = '1.0.7'
 $script:UpdateOwner = 'EnginSarak'
 $script:UpdateRepo = 'DOC-WIZARD'
 $script:UpdateBranch = 'main'
@@ -866,15 +866,6 @@ function Invoke-UpdatePrompt($info) {
         [void][Console]::ReadKey($true)
         return
     }
-}
-
-function Invoke-UpdateCheck {
-    $spin = Start-Spin "checking for updates..."
-    $info = Get-UpdateInfo
-    Stop-Spin $spin
-    if (-not $info) { return }
-    if ((Compare-Version $script:AppVersion $info.Version) -ge 0) { return }
-    Invoke-UpdatePrompt $info
 }
 
 function Invoke-UpdateCheckManual {
@@ -2729,8 +2720,6 @@ $cfgWork = Get-Setting 'WORKDIR'
 if ($cfgWork -and (Test-Path -LiteralPath $cfgWork)) { $WorkDir = $cfgWork.TrimEnd('\') }
 
 try {
-    Invoke-UpdateCheck
-
     if (-not (Test-SetupComplete)) { Invoke-Settings $true }
 
     Invoke-Housekeeping
