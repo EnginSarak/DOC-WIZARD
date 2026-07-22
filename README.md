@@ -39,7 +39,7 @@
 Business Central exports pick lists as PDFs with generic names like `Custom Picking
 List.pdf`. Getting them into the right filename, the right printer tray and the
 right folder is the same handful of steps every time — and building the pump list and
-scan sheet for a COMPAT Ella pick means re-typing serial numbers by hand.
+scan sheet for a pump pick means re-typing serial numbers by hand.
 
 DOC WIZARD reads the PDFs directly and does all of that: renaming, stamping, printing,
 filing, and generating the Excel sheets from data already sitting in the file. No line
@@ -65,7 +65,7 @@ already filled in.
 
 <img src="docs/03-pump-list.png" width="620"/>
 
-If a pick list contains COMPAT Ella pumps, it offers to build two files straight from
+If a pick list contains pumps, it offers to build two files straight from
 the PDF — no line list needed:
 
 - **Pumpen.xlsx** — serial numbers grouped by bin, with counts and a total. Rows still
