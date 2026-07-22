@@ -2,7 +2,7 @@
 
 <img src="docs/01-main-menu.png" alt="DOC WIZARD" width="520"/>
 
-**DOC WIZARD** · v0.0.1
+**DOC WIZARD** · Version 0.0.1
 
 *A PowerShell-based tool that automates renaming, printing, filing and Excel generation for warehouse pick lists and delivery notes*
 
