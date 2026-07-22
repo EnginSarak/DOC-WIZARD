@@ -1,0 +1,9 @@
+VERSION=0.0.1
+NOTE=First version
+FILE=_doc_wizard.ps1
+FILE=DOC WIZARD.bat
+FILE=reset.bat
+FILE=pumplist_template.xlsx
+FILE=pump_control_template.xlsx
+FILE=groupage_template.xlsx
+FILE=docwizard.ico
