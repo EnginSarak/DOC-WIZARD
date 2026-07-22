@@ -19,7 +19,7 @@
 
 ## Table of Contents
 
-- [Why](#why)
+- [How it works](#how-it-works)
 - [Features](#features)
   - [Rename and create documents](#rename-and-create-documents)
   - [Pump picks](#pump-picks)
@@ -34,7 +34,7 @@
 
 ---
 
-## Why
+## How it works
 
 Business Central exports pick lists as PDFs with generic names like `Custom Picking
 List.pdf`. Getting them into the right filename, the right printer tray and the
