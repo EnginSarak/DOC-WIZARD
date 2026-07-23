@@ -1,5 +1,5 @@
-VERSION=0.0.1
-NOTE=First version
+VERSION=0.0.2
+NOTE=Minor fixes
 FILE=_doc_wizard.ps1
 FILE=DOC WIZARD.bat
 FILE=reset.bat
