@@ -131,6 +131,72 @@ $CountryNames = @{
     'UA' = @('ukraine')
 }
 
+$IsoCountry = @{
+    'AD'='Andorra'; 'AE'='United Arab Emirates'; 'AF'='Afghanistan'; 'AG'='Antigua and Barbuda'
+    'AI'='Anguilla'; 'AL'='Albania'; 'AM'='Armenia'; 'AO'='Angola'
+    'AQ'='Antarctica'; 'AR'='Argentina'; 'AS'='American Samoa'; 'AT'='Austria'
+    'AU'='Australia'; 'AW'='Aruba'; 'AX'='Aland Islands'; 'AZ'='Azerbaijan'
+    'BA'='Bosnia and Herzegovina'; 'BB'='Barbados'; 'BD'='Bangladesh'; 'BE'='Belgium'
+    'BF'='Burkina Faso'; 'BG'='Bulgaria'; 'BH'='Bahrain'; 'BI'='Burundi'
+    'BJ'='Benin'; 'BL'='Saint Barthelemy'; 'BM'='Bermuda'; 'BN'='Brunei'
+    'BO'='Bolivia'; 'BQ'='Bonaire'; 'BR'='Brazil'; 'BS'='Bahamas'
+    'BT'='Bhutan'; 'BV'='Bouvet Island'; 'BW'='Botswana'; 'BY'='Belarus'
+    'BZ'='Belize'; 'CA'='Canada'; 'CC'='Cocos Islands'; 'CD'='Congo (DRC)'
+    'CF'='Central African Republic'; 'CG'='Congo'; 'CH'='Switzerland'; 'CI'='Cote d Ivoire'
+    'CK'='Cook Islands'; 'CL'='Chile'; 'CM'='Cameroon'; 'CN'='China'
+    'CO'='Colombia'; 'CR'='Costa Rica'; 'CU'='Cuba'; 'CV'='Cabo Verde'
+    'CW'='Curacao'; 'CX'='Christmas Island'; 'CY'='Cyprus'; 'CZ'='Czechia'
+    'DE'='Germany'; 'DJ'='Djibouti'; 'DK'='Denmark'; 'DM'='Dominica'
+    'DO'='Dominican Republic'; 'DZ'='Algeria'; 'EC'='Ecuador'; 'EE'='Estonia'
+    'EG'='Egypt'; 'EH'='Western Sahara'; 'ER'='Eritrea'; 'ES'='Spain'
+    'ET'='Ethiopia'; 'FI'='Finland'; 'FJ'='Fiji'; 'FK'='Falkland Islands'
+    'FM'='Micronesia'; 'FO'='Faroe Islands'; 'FR'='France'; 'GA'='Gabon'
+    'GB'='United Kingdom'; 'GD'='Grenada'; 'GE'='Georgia'; 'GF'='French Guiana'
+    'GG'='Guernsey'; 'GH'='Ghana'; 'GI'='Gibraltar'; 'GL'='Greenland'
+    'GM'='Gambia'; 'GN'='Guinea'; 'GP'='Guadeloupe'; 'GQ'='Equatorial Guinea'
+    'GR'='Greece'; 'GS'='South Georgia'; 'GT'='Guatemala'; 'GU'='Guam'
+    'GW'='Guinea-Bissau'; 'GY'='Guyana'; 'HK'='Hong Kong'; 'HM'='Heard Island'
+    'HN'='Honduras'; 'HR'='Croatia'; 'HT'='Haiti'; 'HU'='Hungary'
+    'ID'='Indonesia'; 'IE'='Ireland'; 'IL'='Israel'; 'IM'='Isle of Man'
+    'IN'='India'; 'IO'='British Indian Ocean Territory'; 'IQ'='Iraq'; 'IR'='Iran'
+    'IS'='Iceland'; 'IT'='Italy'; 'JE'='Jersey'; 'JM'='Jamaica'
+    'JO'='Jordan'; 'JP'='Japan'; 'KE'='Kenya'; 'KG'='Kyrgyzstan'
+    'KH'='Cambodia'; 'KI'='Kiribati'; 'KM'='Comoros'; 'KN'='Saint Kitts and Nevis'
+    'KP'='North Korea'; 'KR'='South Korea'; 'KW'='Kuwait'; 'KY'='Cayman Islands'
+    'KZ'='Kazakhstan'; 'LA'='Laos'; 'LB'='Lebanon'; 'LC'='Saint Lucia'
+    'LI'='Liechtenstein'; 'LK'='Sri Lanka'; 'LR'='Liberia'; 'LS'='Lesotho'
+    'LT'='Lithuania'; 'LU'='Luxembourg'; 'LV'='Latvia'; 'LY'='Libya'
+    'MA'='Morocco'; 'MC'='Monaco'; 'MD'='Moldova'; 'ME'='Montenegro'
+    'MF'='Saint Martin'; 'MG'='Madagascar'; 'MH'='Marshall Islands'; 'MK'='North Macedonia'
+    'ML'='Mali'; 'MM'='Myanmar'; 'MN'='Mongolia'; 'MO'='Macao'
+    'MP'='Northern Mariana Islands'; 'MQ'='Martinique'; 'MR'='Mauritania'; 'MS'='Montserrat'
+    'MT'='Malta'; 'MU'='Mauritius'; 'MV'='Maldives'; 'MW'='Malawi'
+    'MX'='Mexico'; 'MY'='Malaysia'; 'MZ'='Mozambique'; 'NA'='Namibia'
+    'NC'='New Caledonia'; 'NE'='Niger'; 'NF'='Norfolk Island'; 'NG'='Nigeria'
+    'NI'='Nicaragua'; 'NL'='Netherlands'; 'NO'='Norway'; 'NP'='Nepal'
+    'NR'='Nauru'; 'NU'='Niue'; 'NZ'='New Zealand'; 'OM'='Oman'
+    'PA'='Panama'; 'PE'='Peru'; 'PF'='French Polynesia'; 'PG'='Papua New Guinea'
+    'PH'='Philippines'; 'PK'='Pakistan'; 'PL'='Poland'; 'PM'='Saint Pierre and Miquelon'
+    'PN'='Pitcairn'; 'PR'='Puerto Rico'; 'PS'='Palestine'; 'PT'='Portugal'
+    'PW'='Palau'; 'PY'='Paraguay'; 'QA'='Qatar'; 'RE'='Reunion'
+    'RO'='Romania'; 'RS'='Serbia'; 'RU'='Russia'; 'RW'='Rwanda'
+    'SA'='Saudi Arabia'; 'SB'='Solomon Islands'; 'SC'='Seychelles'; 'SD'='Sudan'
+    'SE'='Sweden'; 'SG'='Singapore'; 'SH'='Saint Helena'; 'SI'='Slovenia'
+    'SJ'='Svalbard'; 'SK'='Slovakia'; 'SL'='Sierra Leone'; 'SM'='San Marino'
+    'SN'='Senegal'; 'SO'='Somalia'; 'SR'='Suriname'; 'SS'='South Sudan'
+    'ST'='Sao Tome and Principe'; 'SV'='El Salvador'; 'SX'='Sint Maarten'; 'SY'='Syria'
+    'SZ'='Eswatini'; 'TC'='Turks and Caicos'; 'TD'='Chad'; 'TF'='French Southern Territories'
+    'TG'='Togo'; 'TH'='Thailand'; 'TJ'='Tajikistan'; 'TK'='Tokelau'
+    'TL'='Timor-Leste'; 'TM'='Turkmenistan'; 'TN'='Tunisia'; 'TO'='Tonga'
+    'TR'='Turkey'; 'TT'='Trinidad and Tobago'; 'TV'='Tuvalu'; 'TW'='Taiwan'
+    'TZ'='Tanzania'; 'UA'='Ukraine'; 'UG'='Uganda'; 'UM'='US Minor Outlying Islands'
+    'US'='United States'; 'UY'='Uruguay'; 'UZ'='Uzbekistan'; 'VA'='Vatican City'
+    'VC'='Saint Vincent'; 'VE'='Venezuela'; 'VG'='British Virgin Islands'; 'VI'='US Virgin Islands'
+    'VN'='Vietnam'; 'VU'='Vanuatu'; 'WF'='Wallis and Futuna'; 'WS'='Samoa'
+    'XK'='Kosovo'; 'YE'='Yemen'; 'YT'='Mayotte'; 'ZA'='South Africa'
+    'ZM'='Zambia'; 'ZW'='Zimbabwe'
+}
+
 function Show-Header {
     $art = Get-BannerArt
     if ($art.Name -eq 'Plain') {
@@ -715,7 +781,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '0.0.1'
+$script:AppVersion = '0.0.2'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -1714,36 +1780,63 @@ function Get-DeliveryInfo([string]$path) {
     }
     $siteText = $siteSb.ToString()
 
-    $destText = Get-AddressWindow $t @('Destination', 'Ship To', 'Deliver To', 'Sold To', 'Customer')
-    $country = Get-CountryCode $destText
-    if (-not $country) { $country = Get-CountryCode $siteText }
+    $destBlock = Get-DestBlock $t
+    $country = Get-DestCountry $destBlock
 
-    $location = $destText
-    if ($customer -and $location.StartsWith($customer)) { $location = $location.Substring($customer.Length).Trim() }
-    $location = ([regex]::Replace($location, '\s+[A-Za-z]{2}\s*$', '')).Trim()
+    $addr = New-Object System.Collections.Generic.List[string]
+    foreach ($line in ($destBlock -split "`n")) {
+        $lt = $line.Trim()
+        if (-not $lt) { continue }
+        if ($lt -match '^(Delivery Note|Packing List|Page|Truck|Destination|Sold To|Ship To|Deliver To|Customer)$') { continue }
+        if ($lt -match '^\d{1,3}$') { continue }
+        if ($lt -match '^(PWS|PAC|WP)\d') { continue }
+        if ($lt -match '^Connected to|Shipment No') { continue }
+        $addr.Add($lt)
+    }
+    while ($addr.Count -gt 1 -and $addr[$addr.Count - 1] -match '^[A-Z]{2}$') { $addr.RemoveAt($addr.Count - 1) }
+    $location = ""
+    if ($addr.Count -gt 0) {
+        $location = $addr[$addr.Count - 1]
+        $location = ([regex]::Replace($location, '\s+[A-Z]{2}\s*$', '')).Trim()
+    }
 
-    return @{ Customer = $customer; Month = $month; Year = $year; SiteText = $siteText; Country = $country; DestText = $destText; Location = $location }
+    return @{ Customer = $customer; Month = $month; Year = $year; SiteText = $siteText; Country = $country; DestText = $destBlock; Location = $location }
 }
 
-function Get-AddressWindow([string]$t, [string[]]$labels) {
-    foreach ($lab in $labels) {
-        $li = $t.IndexOf($lab + ') Tj')
-        if ($li -lt 0) { continue }
-        $seg = $t.Substring($li, [math]::Min(1200, $t.Length - $li))
+function Get-DestBlock([string]$t) {
+    $toks = New-Object System.Collections.Generic.List[string]
+    foreach ($m in [regex]::Matches($t, '\(((?:[^()\\]|\\.)*)\)\s*Tj')) {
+        $toks.Add(($m.Groups[1].Value -replace '\\\(', '(' -replace '\\\)', ')').Trim())
+    }
+    foreach ($lab in @('Destination', 'Ship To', 'Deliver To', 'Sold To', 'Customer')) {
+        $start = -1
+        for ($i = 0; $i -lt $toks.Count; $i++) { if ($toks[$i] -eq $lab) { $start = $i; break } }
+        if ($start -lt 0) { continue }
         $sb = New-Object System.Text.StringBuilder
-        $count = 0
-        foreach ($m in [regex]::Matches($seg, '\(((?:[^()\\]|\\.)*)\)\s*Tj')) {
-            $v = ($m.Groups[1].Value -replace '\\\(', '(' -replace '\\\)', ')').Trim()
+        $n = 0
+        for ($i = $start + 1; $i -lt $toks.Count -and $n -lt 14; $i++) {
+            $v = $toks[$i]
             if (-not $v) { continue }
-            if ($count -gt 0) { [void]$sb.Append("  ") }
+            if ($n -gt 0 -and $v -match '^(Pick-?up|Incoterms|Carrier|Transport Reason|Shipment Method|Doc\. Type|Connected to)') { break }
+            [void]$sb.Append("`n")
             [void]$sb.Append($v)
-            $count++
-            if ($count -ge 6) { break }
+            $n++
         }
         $r = $sb.ToString().Trim()
         if ($r) { return $r }
     }
     return ""
+}
+
+function Get-DestCountry([string]$destBlock) {
+    if (-not $destBlock) { return "" }
+    $found = ""
+    foreach ($mm in [regex]::Matches($destBlock, '\b([A-Z]{2})\b')) {
+        $cc = $mm.Groups[1].Value
+        if ($IsoCountry.ContainsKey($cc)) { $found = $cc }
+    }
+    if ($found) { return $found }
+    return (Get-CountryCode $destBlock)
 }
 
 function Normalize-Name([string]$n) {
@@ -1780,21 +1873,28 @@ function Score-Name([string]$a, [string]$b) {
 }
 
 function Find-BestBase([string]$root, [hashtable]$info) {
+    if ($info.Country) {
+        $countryDir = $null
+        foreach ($cd in (Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue)) {
+            if ((Score-Country $cd.Name $info.Country) -ge 1) { $countryDir = $cd.FullName; break }
+        }
+        if (-not $countryDir) { return $root }
+        $bestCust = $null; $bestCustScore = 0
+        foreach ($ud in (Get-ChildItem -LiteralPath $countryDir -Directory -ErrorAction SilentlyContinue)) {
+            $s = Score-Name $info.Customer $ud.Name
+            if ($s -gt $bestCustScore) { $bestCustScore = $s; $bestCust = $ud.FullName }
+        }
+        if ($bestCust) { return $bestCust }
+        return $countryDir
+    }
     $bestCust = $null; $bestCustScore = 0
-    $bestCountry = $null; $bestCountryScore = -1
     foreach ($cd in (Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue)) {
-        $cScore = Score-Country $cd.Name $info.Country
-        if ($cScore -gt $bestCountryScore) { $bestCountryScore = $cScore; $bestCountry = $cd.FullName }
         foreach ($ud in (Get-ChildItem -LiteralPath $cd.FullName -Directory -ErrorAction SilentlyContinue)) {
             $s = Score-Name $info.Customer $ud.Name
-            if ($s -gt 0) {
-                $s = $s + ($cScore * 15)
-                if ($s -gt $bestCustScore) { $bestCustScore = $s; $bestCust = $ud.FullName }
-            }
+            if ($s -gt $bestCustScore) { $bestCustScore = $s; $bestCust = $ud.FullName }
         }
     }
     if ($bestCust) { return $bestCust }
-    if ($bestCountryScore -ge 1) { return $bestCountry }
     return $root
 }
 
@@ -1850,15 +1950,7 @@ function Get-CountryCode([string]$siteText) {
 
 function Get-CountryLabel([string]$code) {
     if (-not $code) { return "(not found in document)" }
-    $name = ""
-    if ($CountryNames.ContainsKey($code)) {
-        $list = $CountryNames[$code]
-        if ($list.Count -ge 2) { $name = $list[1] } else { $name = $list[0] }
-    }
-    if ($name) {
-        $name = $name.Substring(0, 1).ToUpper() + $name.Substring(1)
-        return ($code + " (" + $name + ")")
-    }
+    if ($IsoCountry.ContainsKey($code)) { return ($code + " (" + $IsoCountry[$code] + ")") }
     return $code
 }
 
@@ -1869,7 +1961,13 @@ function Score-Country([string]$folderName, [string]$code) {
     $lc = $code.ToLower()
     if ($nf -eq $lc) { return 1 }
     if ($nf -match ('\b' + $lc + '\b')) { return 1 }
-    foreach ($v in $CountryNames[$code]) { if ($nf -eq $v -or $nf.Contains($v)) { return 1 } }
+    if ($CountryNames.ContainsKey($code)) {
+        foreach ($v in $CountryNames[$code]) { if ($nf -eq $v -or $nf.Contains($v)) { return 1 } }
+    }
+    if ($IsoCountry.ContainsKey($code)) {
+        $en = Normalize-Name $IsoCountry[$code]
+        if ($en -and ($nf -eq $en -or $nf.Contains($en))) { return 1 }
+    }
     return 0
 }
 
@@ -2331,14 +2429,16 @@ function Invoke-Move {
             if (-not $pwsNum) { $pwsNum = Get-PwsFromPdf $f.FullName }
             $paths = @()
             $detail = $pacNum
+            $src = $f
             if ($pwsNum -and $pwsByNum.ContainsKey($pwsNum)) {
                 $paths += $pwsByNum[$pwsNum].FullName
                 $usedPws[$pwsNum] = $true
                 $detail = "$pwsNum + $pacNum"
+                $src = $pwsByNum[$pwsNum]
             }
             $paths += $f.FullName
             if ($sord) { $detail = $detail + " " + [char]0x2013 + " " + $sord }
-            $delEntries.Add(@{ Detail = $detail; Paths = $paths; Src = $f })
+            $delEntries.Add(@{ Detail = $detail; Paths = $paths; Src = $src })
         }
         foreach ($num in ($pwsByNum.Keys | Sort-Object)) {
             if (-not $usedPws[$num]) {
