@@ -781,7 +781,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '0.0.3'
+$script:AppVersion = '0.0.4'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -1879,12 +1879,14 @@ function Find-BestBase([string]$root, [hashtable]$info) {
         if ((Score-Country $cd.Name $info.Country) -ge 1) { $countryDir = $cd.FullName; break }
     }
     if (-not $countryDir) { return $root }
-    $bestCust = $null; $bestCustScore = 0
+    $site = $info.DestText
+    if (-not $site) { $site = $info.SiteText }
+    $best = $null; $bestScore = 0
     foreach ($ud in (Get-ChildItem -LiteralPath $countryDir -Directory -ErrorAction SilentlyContinue)) {
-        $s = Score-Name $info.Customer $ud.Name
-        if ($s -gt $bestCustScore) { $bestCustScore = $s; $bestCust = $ud.FullName }
+        $sc = (Score-Name $info.Customer $ud.Name) + (Score-FolderSite $ud.Name $site) * 15
+        if ($sc -gt $bestScore) { $bestScore = $sc; $best = $ud.FullName }
     }
-    if ($bestCust) { return $bestCust }
+    if ($best) { return $best }
     return $countryDir
 }
 
