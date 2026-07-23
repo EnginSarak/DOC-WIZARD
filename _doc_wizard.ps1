@@ -781,7 +781,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '0.0.2'
+$script:AppVersion = '0.0.3'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -1873,29 +1873,19 @@ function Score-Name([string]$a, [string]$b) {
 }
 
 function Find-BestBase([string]$root, [hashtable]$info) {
-    if ($info.Country) {
-        $countryDir = $null
-        foreach ($cd in (Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue)) {
-            if ((Score-Country $cd.Name $info.Country) -ge 1) { $countryDir = $cd.FullName; break }
-        }
-        if (-not $countryDir) { return $root }
-        $bestCust = $null; $bestCustScore = 0
-        foreach ($ud in (Get-ChildItem -LiteralPath $countryDir -Directory -ErrorAction SilentlyContinue)) {
-            $s = Score-Name $info.Customer $ud.Name
-            if ($s -gt $bestCustScore) { $bestCustScore = $s; $bestCust = $ud.FullName }
-        }
-        if ($bestCust) { return $bestCust }
-        return $countryDir
-    }
-    $bestCust = $null; $bestCustScore = 0
+    if (-not $info.Country) { return $root }
+    $countryDir = $null
     foreach ($cd in (Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue)) {
-        foreach ($ud in (Get-ChildItem -LiteralPath $cd.FullName -Directory -ErrorAction SilentlyContinue)) {
-            $s = Score-Name $info.Customer $ud.Name
-            if ($s -gt $bestCustScore) { $bestCustScore = $s; $bestCust = $ud.FullName }
-        }
+        if ((Score-Country $cd.Name $info.Country) -ge 1) { $countryDir = $cd.FullName; break }
+    }
+    if (-not $countryDir) { return $root }
+    $bestCust = $null; $bestCustScore = 0
+    foreach ($ud in (Get-ChildItem -LiteralPath $countryDir -Directory -ErrorAction SilentlyContinue)) {
+        $s = Score-Name $info.Customer $ud.Name
+        if ($s -gt $bestCustScore) { $bestCustScore = $s; $bestCust = $ud.FullName }
     }
     if ($bestCust) { return $bestCust }
-    return $root
+    return $countryDir
 }
 
 function Test-FolderMonth([string]$name, [int]$month, [string]$year) {
@@ -1956,6 +1946,7 @@ function Get-CountryLabel([string]$code) {
 
 function Score-Country([string]$folderName, [string]$code) {
     if (-not $code) { return 0 }
+    if ($folderName.Trim().ToUpper() -eq $code) { return 1 }
     $nf = Normalize-Name $folderName
     if (-not $nf) { return 0 }
     $lc = $code.ToLower()
