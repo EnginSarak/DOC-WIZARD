@@ -823,7 +823,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '0.0.7'
+$script:AppVersion = '0.0.8'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -1635,7 +1635,7 @@ function Invoke-Print {
         $pwsByNum = @{}
         foreach ($f in $pwsFiles) { if ($f.Name -match '^(PWS\d+)') { $pwsByNum[$matches[1]] = $f } }
 
-        $groups = New-Object System.Collections.Generic.List[object]
+        $pairEntries = New-Object System.Collections.Generic.List[object]
         $usedPws = @{}
         $pairsDirty = $false
         foreach ($f in $pacFiles) {
@@ -1647,35 +1647,57 @@ function Invoke-Print {
                 if ($pwsNum) { $pairs[$pacNum] = $pwsNum; $pairsDirty = $true }
             }
             $paths = @()
-            $label = $pacNum
+            $detail = $pacNum
+            $src = $f
             if ($pwsNum -and $pwsByNum.ContainsKey($pwsNum)) {
                 $paths += $pwsByNum[$pwsNum].FullName
                 $usedPws[$pwsNum] = $true
-                $label = "$pwsNum + $pacNum"
+                $detail = "$pwsNum + $pacNum"
+                $src = $pwsByNum[$pwsNum]
             }
             $paths += $f.FullName
-            if ($sord) { $label = $label + "   (" + $sord + ")" }
-            $groups.Add(@{ Id = $pacNum; Label = $label; Paths = $paths })
+            if ($sord) { $detail = $detail + "   " + $sord }
+            $pairEntries.Add(@{ Id = $pacNum; Detail = $detail; Paths = $paths; Src = $src })
         }
         foreach ($num in ($pwsByNum.Keys | Sort-Object)) {
             if (-not $usedPws[$num]) {
                 $f = $pwsByNum[$num]
                 $sord = if ($f.Name -match 'SORD\d+-\d+') { $matches[0] } else { "" }
-                $label = $num
-                if ($sord) { $label = $label + "   (" + $sord + ")" }
-                $groups.Add(@{ Id = $num; Label = $label; Paths = @($f.FullName) })
+                $detail = $num
+                if ($sord) { $detail = $detail + "   " + $sord }
+                $pairEntries.Add(@{ Id = $num; Detail = $detail; Paths = @($f.FullName); Src = $f })
             }
         }
         if ($pairsDirty -and $pairs.Count -gt 0) {
             try { Set-Content -LiteralPath $pairFile -Value (@($pairs.GetEnumerator() | ForEach-Object { $_.Key + "=" + $_.Value })) } catch { }
         }
 
+        foreach ($pe in $pairEntries) {
+            $di = Get-DeliveryInfo $pe.Src.FullName
+            $pe.Info = $di
+            $pe.Key = (Normalize-Name $di.Customer) + '|' + (Normalize-Name $di.Location) + '|' + $di.Country
+        }
+        $groups = New-Object System.Collections.Generic.List[object]
+        $seenKey = @{}
+        foreach ($pe in $pairEntries) {
+            if ($seenKey.ContainsKey($pe.Key)) { continue }
+            $seenKey[$pe.Key] = $true
+            $members = @($pairEntries | Where-Object { $_.Key -eq $pe.Key })
+            $allPaths = @()
+            $ids = @()
+            foreach ($m in $members) { $allPaths += $m.Paths; $ids += $m.Id }
+            $groups.Add(@{ Id = ($ids -join '+'); Info = $pe.Info; Count = $members.Count; Members = $members; Paths = $allPaths })
+        }
+
         $entries = New-Object System.Collections.Generic.List[object]
         $entries.Add(@{ Text = "Delivery documents   (2 copies)"; Header = $true })
         if ($groups.Count -eq 0) { $entries.Add(@{ Text = "(none)"; Header = $true }) }
         foreach ($g in $groups) {
+            $cust = $g.Info.Customer
+            if (-not $cust) { $cust = "(unknown customer)" }
+            if ($g.Count -gt 1) { $disp = $cust + "   (" + $g.Count + " documents)" }
+            else { $disp = $cust + "   (" + $g.Members[0].Detail + ")" }
             $done = $printed.Contains($g.Id)
-            $disp = $g.Label
             if ($done) { $disp = $disp + "   [printed]" }
             $entries.Add(@{ Text = $disp; Header = $false; Paths = $g.Paths; Copies = 2; Id = $g.Id; Done = $done })
         }
