@@ -781,7 +781,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '0.0.4'
+$script:AppVersion = '0.0.5'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -1160,6 +1160,10 @@ function Invoke-Rename {
         $pws  = First $text 'PWS\d+'
         $wp   = First $text 'WP\d+'
         $sord = First $text 'SORD\d+-\d+'
+        if ($pac) { $pac = $pac.ToUpper() }
+        if ($pws) { $pws = $pws.ToUpper() }
+        if ($wp) { $wp = $wp.ToUpper() }
+        if ($sord) { $sord = $sord.ToUpper() }
 
         if ($pac -and $pws) { $pairs[$pac] = $pws }
 
@@ -1170,7 +1174,7 @@ function Invoke-Rename {
             $newName = "${pws}_${sord}.pdf"
         } elseif ($wp -and $sord) {
             $kunde = Get-Kunde $text
-            if ($kunde) { $newName = "${wp}_${kunde}_${sord}.pdf" }
+            if ($kunde) { $newName = "${wp}_$($kunde.ToUpper())_${sord}.pdf" }
             else { $newName = "${wp}_${sord}.pdf" }
         }
 
@@ -1179,16 +1183,23 @@ function Invoke-Rename {
             continue
         }
 
-        if ($orig -eq $newName) { $skipped++; continue }
+        if ($orig -ceq $newName) { $skipped++; continue }
 
         $target = Join-Path $WorkDir $newName
-        if (Test-Path -LiteralPath $target) {
+        $caseOnly = ($orig -eq $newName)
+        if (-not $caseOnly -and (Test-Path -LiteralPath $target)) {
             Write-Host ("  skipped (target already exists): " + $orig) -ForegroundColor DarkYellow
             $skipped++
             continue
         }
 
-        Move-Item -LiteralPath $f -Destination $target
+        if ($caseOnly) {
+            $tmp = Join-Path $WorkDir ($newName + '.__case')
+            Move-Item -LiteralPath $f -Destination $tmp -Force
+            Move-Item -LiteralPath $tmp -Destination $target -Force
+        } else {
+            Move-Item -LiteralPath $f -Destination $target
+        }
         Write-Host ("  " + $orig + "  ->  " + $newName) -ForegroundColor Green
         $renamed++
     }
