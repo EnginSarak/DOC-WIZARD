@@ -522,15 +522,31 @@ function Get-AllSords([string]$text) {
     return $out
 }
 
+function Test-IsName([string]$s) {
+    if (-not $s) { return $false }
+    if ($s -notmatch '[A-Za-z]') { return $false }
+    if ($s -match '^\d') { return $false }
+    if ($s -match '^[A-Za-z]{2}-\d') { return $false }
+    if ($s -match "^'?s\s") { return $false }
+    if ($s -match '^(Code|Description|Package|appearance|Delivery Note|Packing List|Page|Truck|Destination|Customer|Sold To|Ship To|Deliver To|Source|Document|Planned|Release|Date|Action Type|Item|Bin|Lot|Serial|Notes|Carrier|STORAGE|U\.M\.|Q\.ty|UoM\.)$') { return $false }
+    return $true
+}
+
 function Get-DestName([string]$text) {
-    foreach ($line in ((Get-DestBlock $text) -split "`n")) {
-        $lt = $line.Trim()
-        if (-not $lt) { continue }
-        if ($lt -match '^(Delivery Note|Packing List|Page|Truck|Destination|Sold To|Ship To|Deliver To|Customer|Source|Document|Planned|Release|Date|Action Type|Package|appearance|Item|Description|Bin|Lot|Serial)') { continue }
-        if ($lt -match '^\d') { continue }
-        if ($lt -match '^[A-Za-z]{2}-\d') { continue }
-        if ($lt -notmatch '[A-Za-z]') { continue }
-        return (($lt -split ',')[0]).Trim()
+    $toks = New-Object System.Collections.Generic.List[string]
+    foreach ($m in [regex]::Matches($text, '\(((?:[^()\\]|\\.)*)\)\s*Tj')) {
+        $toks.Add(($m.Groups[1].Value -replace '\\\(', '(' -replace '\\\)', ')').Trim())
+    }
+    for ($i = 0; $i -lt $toks.Count - 1; $i++) {
+        if ($toks[$i] -eq 'Customer' -and (Test-IsName $toks[$i + 1])) { return (($toks[$i + 1] -split ',')[0]).Trim() }
+    }
+    for ($i = 0; $i -lt $toks.Count; $i++) {
+        if ($toks[$i] -eq 'Destination') {
+            for ($j = $i + 1; $j -lt $toks.Count -and $j -lt $i + 12; $j++) {
+                if (Test-IsName $toks[$j]) { return (($toks[$j] -split ',')[0]).Trim() }
+            }
+            break
+        }
     }
     return ""
 }
@@ -823,7 +839,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '0.0.8'
+$script:AppVersion = '0.0.9'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -1830,7 +1846,10 @@ function Get-DeliveryInfo([string]$path) {
     $dm = [regex]::Match($t, '(\d{2})\.(\d{2})\.(\d{4})')
     if ($dm.Success) { $month = [int]$dm.Groups[2].Value; $year = $dm.Groups[3].Value }
 
-    $customer = Get-DestName $t
+    $rawName = Get-DestName $t
+    $cparts = @($rawName -replace '[\\/:*?"<>|]', ' ' -split '\s+' | Where-Object { $_ -ne '' -and $_ -notmatch '^[&+]+$' -and $_ -notmatch '^(and|und)$' })
+    if ($cparts.Count -gt 2) { $cparts = $cparts[0..1] }
+    $customer = ($cparts -join ' ')
 
     $siteSb = New-Object System.Text.StringBuilder
     foreach ($m in [regex]::Matches($t, '\(((?:[^()\\]|\\.)*)\)\s*Tj')) {
