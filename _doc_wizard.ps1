@@ -489,6 +489,19 @@ function First([string]$text, [string]$pattern) {
     if ($m.Success) { return $m.Value } else { return $null }
 }
 
+function Get-Sord([string]$text) {
+    $m = [regex]::Match($text, 'SORD\d+-\d+')
+    if ($m.Success) { return $m.Value }
+    $sb = New-Object System.Text.StringBuilder
+    foreach ($mm in [regex]::Matches($text, '\(((?:[^()\\]|\\.)*)\)\s*Tj')) {
+        [void]$sb.Append(' ')
+        [void]$sb.Append($mm.Groups[1].Value)
+    }
+    $m2 = [regex]::Match($sb.ToString(), 'SORD\d+-\s*\d+')
+    if ($m2.Success) { return ($m2.Value -replace '\s', '') }
+    return $null
+}
+
 function Get-Kunde([string]$text) {
     $m = [regex]::Match($text, '\(Destination\)\s*Tj.*?Td\s*\(([^)]*)\)\s*Tj', [System.Text.RegularExpressions.RegexOptions]::Singleline)
     if (-not $m.Success) { return $null }
@@ -781,7 +794,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '0.0.5'
+$script:AppVersion = '0.0.6'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -1159,7 +1172,7 @@ function Invoke-Rename {
         $pac  = First $text 'PAC\d+'
         $pws  = First $text 'PWS\d+'
         $wp   = First $text 'WP\d+'
-        $sord = First $text 'SORD\d+-\d+'
+        $sord = Get-Sord $text
         if ($pac) { $pac = $pac.ToUpper() }
         if ($pws) { $pws = $pws.ToUpper() }
         if ($wp) { $wp = $wp.ToUpper() }
