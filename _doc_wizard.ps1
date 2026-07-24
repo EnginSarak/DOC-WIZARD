@@ -502,13 +502,42 @@ function Get-Sord([string]$text) {
     return $null
 }
 
+function Get-AllSords([string]$text) {
+    $sb = New-Object System.Text.StringBuilder
+    foreach ($mm in [regex]::Matches($text, '\(((?:[^()\\]|\\.)*)\)\s*Tj')) {
+        [void]$sb.Append(' ')
+        [void]$sb.Append($mm.Groups[1].Value)
+    }
+    $seen = New-Object System.Collections.Generic.List[string]
+    foreach ($m in [regex]::Matches($sb.ToString(), 'SORD\d+-\s*\d+')) {
+        $v = $m.Value -replace '\s', ''
+        if (-not $seen.Contains($v)) { $seen.Add($v) }
+    }
+    if ($seen.Count -eq 0) { return $null }
+    $out = $seen[0]
+    for ($i = 1; $i -lt $seen.Count; $i++) {
+        $suf = ($seen[$i] -split '-', 2)[1]
+        $out = $out + '_' + $suf
+    }
+    return $out
+}
+
+function Get-DestName([string]$text) {
+    foreach ($line in ((Get-DestBlock $text) -split "`n")) {
+        $lt = $line.Trim()
+        if (-not $lt) { continue }
+        if ($lt -match '^(Delivery Note|Packing List|Page|Truck|Destination|Sold To|Ship To|Deliver To|Customer|Source|Document|Planned|Release|Date|Action Type|Package|appearance|Item|Description|Bin|Lot|Serial)') { continue }
+        if ($lt -match '^\d') { continue }
+        if ($lt -match '^[A-Za-z]{2}-\d') { continue }
+        if ($lt -notmatch '[A-Za-z]') { continue }
+        return (($lt -split ',')[0]).Trim()
+    }
+    return ""
+}
+
 function Get-Kunde([string]$text) {
-    $m = [regex]::Match($text, '\(Destination\)\s*Tj.*?Td\s*\(([^)]*)\)\s*Tj', [System.Text.RegularExpressions.RegexOptions]::Singleline)
-    if (-not $m.Success) { return $null }
-    $v = $m.Groups[1].Value
-    $v = $v -replace '\\\(', '(' -replace '\\\)', ')'
-    $v = $v.Trim()
-    if ($v.Length -eq 0) { return $null }
+    $v = Get-DestName $text
+    if (-not $v) { return $null }
     $v = $v -replace '[\\/:*?"<>|]', ' '
     $parts = @($v -split '\s+' | Where-Object { $_ -ne '' -and $_ -notmatch '^[&+]+$' -and $_ -notmatch '^(and|und)$' })
     if ($parts.Count -eq 0) { return $null }
@@ -794,7 +823,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '0.0.6'
+$script:AppVersion = '0.0.7'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -1172,7 +1201,7 @@ function Invoke-Rename {
         $pac  = First $text 'PAC\d+'
         $pws  = First $text 'PWS\d+'
         $wp   = First $text 'WP\d+'
-        $sord = Get-Sord $text
+        $sord = Get-AllSords $text
         if ($pac) { $pac = $pac.ToUpper() }
         if ($pws) { $pws = $pws.ToUpper() }
         if ($wp) { $wp = $wp.ToUpper() }
@@ -1779,21 +1808,7 @@ function Get-DeliveryInfo([string]$path) {
     $dm = [regex]::Match($t, '(\d{2})\.(\d{2})\.(\d{4})')
     if ($dm.Success) { $month = [int]$dm.Groups[2].Value; $year = $dm.Groups[3].Value }
 
-    $label = if ($t -match 'Sold To\) Tj') { 'Sold To' } else { 'Customer' }
-    $customer = ""
-    $li = $t.IndexOf($label + ') Tj')
-    if ($li -ge 0) {
-        $seg = $t.Substring($li + 5, [math]::Min(450, $t.Length - $li - 5))
-        $fm = [regex]::Match($seg, '/(F\d+)\s+[\d.]+\s+Tf[^)>]*?(?:\(((?:[^()\\]|\\.)*)\)|<([0-9A-Fa-f]+)>)\s*Tj', [System.Text.RegularExpressions.RegexOptions]::Singleline)
-        if ($fm.Success) {
-            if ($fm.Groups[2].Success) {
-                $customer = $fm.Groups[2].Value -replace '\\\(', '(' -replace '\\\)', ')'
-            } else {
-                $customer = Decode-Hex $s (Get-PageBody $s) $fm.Groups[1].Value $fm.Groups[3].Value
-            }
-            $customer = $customer.Trim()
-        }
-    }
+    $customer = Get-DestName $t
 
     $siteSb = New-Object System.Text.StringBuilder
     foreach ($m in [regex]::Matches($t, '\(((?:[^()\\]|\\.)*)\)\s*Tj')) {
