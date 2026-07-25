@@ -490,14 +490,14 @@ function First([string]$text, [string]$pattern) {
 }
 
 function Get-Sord([string]$text) {
-    $m = [regex]::Match($text, 'SORD\d+-\d+')
+    $m = [regex]::Match($text, '(?:SORD\d+-\d+|TRN-ORD-\d+)')
     if ($m.Success) { return $m.Value }
     $sb = New-Object System.Text.StringBuilder
     foreach ($mm in [regex]::Matches($text, '\(((?:[^()\\]|\\.)*)\)\s*Tj')) {
         [void]$sb.Append(' ')
         [void]$sb.Append($mm.Groups[1].Value)
     }
-    $m2 = [regex]::Match($sb.ToString(), 'SORD\d+-\s*\d+')
+    $m2 = [regex]::Match($sb.ToString(), '(?:SORD\d+-\s*\d+|TRN-\s*ORD-\s*\d+)')
     if ($m2.Success) { return ($m2.Value -replace '\s', '') }
     return $null
 }
@@ -509,14 +509,15 @@ function Get-AllSords([string]$text) {
         [void]$sb.Append($mm.Groups[1].Value)
     }
     $seen = New-Object System.Collections.Generic.List[string]
-    foreach ($m in [regex]::Matches($sb.ToString(), 'SORD\d+-\s*\d+')) {
+    foreach ($m in [regex]::Matches($sb.ToString(), '(?:SORD\d+-\s*\d+|TRN-\s*ORD-\s*\d+)')) {
         $v = $m.Value -replace '\s', ''
         if (-not $seen.Contains($v)) { $seen.Add($v) }
     }
     if ($seen.Count -eq 0) { return $null }
     $out = $seen[0]
     for ($i = 1; $i -lt $seen.Count; $i++) {
-        $suf = ($seen[$i] -split '-', 2)[1]
+        $dm = [regex]::Match($seen[$i], '(\d+)\s*$')
+        $suf = $dm.Groups[1].Value
         if ($suf.Length -gt 4) { $suf = $suf.Substring($suf.Length - 4) }
         $out = $out + '_' + $suf
     }
@@ -524,7 +525,7 @@ function Get-AllSords([string]$text) {
 }
 
 function Format-SordDisplay([string]$name) {
-    $m = [regex]::Match($name, 'SORD\d+-\d+(?:_\d+)*')
+    $m = [regex]::Match($name, '(?:SORD\d+-\d+|TRN-ORD-\d+)(?:_\d+)*')
     if (-not $m.Success) { return "" }
     $parts = $m.Value -split '_'
     $out = $parts[0]
@@ -584,7 +585,8 @@ function Test-WorkFileExists([string]$nameOrPrefix) {
     if (-not $nameOrPrefix) { return $false }
     if ($nameOrPrefix -match '^GROUPAGE_(.+)$') {
         $key = $matches[1]
-        $n = @(Get-ChildItem -LiteralPath $WorkDir -Filter ('WP*_' + $key + '_SORD*.pdf') -ErrorAction SilentlyContinue).Count
+        $n = @(Get-ChildItem -LiteralPath $WorkDir -Filter ('WP*_' + $key + '_*.pdf') -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match ('^WP\d+_' + [regex]::Escape($key) + '_(?:SORD\d+-\d+|TRN-ORD-\d+)(?:_\d+)*\.pdf$') }).Count
         return ($n -ge 2)
     }
     if ($nameOrPrefix -match '^(PAC|PWS|WP)\d+$') {
@@ -635,7 +637,7 @@ function Get-ActiveGroupages {
 
     $byCustomer = @{}
     foreach ($f in $wpFiles) {
-        if ($f.Name -match '^WP\d+_(.+)_SORD\d+-\d+(?:_\d+)*\.pdf$') {
+        if ($f.Name -match '^WP\d+_(.+)_(?:SORD\d+-\d+|TRN-ORD-\d+)(?:_\d+)*\.pdf$') {
             $key = $matches[1]
             if (-not $byCustomer.ContainsKey($key)) { $byCustomer[$key] = New-Object System.Collections.Generic.List[object] }
             $byCustomer[$key].Add($f)
@@ -736,7 +738,7 @@ function Invoke-GroupageCheck {
 
     $groups = @{}
     foreach ($f in $wpFiles) {
-        if ($f.Name -match '^WP\d+_(.+)_SORD\d+-\d+(?:_\d+)*\.pdf$') {
+        if ($f.Name -match '^WP\d+_(.+)_(?:SORD\d+-\d+|TRN-ORD-\d+)(?:_\d+)*\.pdf$') {
             $key = $matches[1]
             if (-not $groups.ContainsKey($key)) { $groups[$key] = New-Object System.Collections.Generic.List[object] }
             $groups[$key].Add($f)
@@ -916,6 +918,28 @@ function Format-KundeName([string]$v) {
     return ($parts -join '_')
 }
 
+function Set-SheetArray($ws, [int]$startRow, [int]$startCol, $arr) {
+    $rows = $arr.GetLength(0)
+    $cols = $arr.GetLength(1)
+    $r2 = $startRow + $rows - 1
+    $c2 = $startCol + $cols - 1
+    try {
+        $rng = $ws.Range($ws.Cells($startRow, $startCol), $ws.Cells($r2, $c2))
+        $rng.Value2 = $arr
+        $probe = $ws.Cells($startRow, $startCol).Value2
+        if ($rows -gt 0 -and $cols -gt 0 -and $null -eq $probe -and $null -ne $arr[0, 0]) {
+            throw "range write did not take"
+        }
+        return
+    } catch {
+        for ($i = 0; $i -lt $rows; $i++) {
+            for ($j = 0; $j -lt $cols; $j++) {
+                $ws.Cells($startRow + $i, $startCol + $j).Value2 = $arr[$i, $j]
+            }
+        }
+    }
+}
+
 function Get-PumpTemplate {
     foreach ($pat in @('pumplist_template.xls*', '*Pumpen TEMPLATE.xls*', '*pump*template*.xls*')) {
         $t = @(Get-ChildItem -LiteralPath $AppDir -Filter $pat -ErrorAction SilentlyContinue)
@@ -985,10 +1009,7 @@ function New-ControlWorkbook($data) {
         for ($i = 0; $i -lt $cnt; $i++) {
             $arr[$i, 0] = $rows[$i].Serial
         }
-        $lastRow = $cnt + 1
-        $c1 = $wsP.Cells(2, $serCol)
-        $c2 = $wsP.Cells($lastRow, $serCol)
-        $wsP.Range($c1, $c2).Value2 = $arr
+        Set-SheetArray $wsP 2 $serCol $arr
 
         $xl.CalculateFullRebuild()
         $wsS = $wbT.Worksheets.Item("Scan")
@@ -1078,9 +1099,7 @@ function New-PumpWorkbook($data, [string]$srcName) {
             $arr[$t, 0] = $rows[$i].Serial
             $arr[$t, 1] = $rows[$i].Bin
         }
-        $c1 = $wsT.Cells(1, 1)
-        $c2 = $wsT.Cells($lastRow, 2)
-        $wsT.Range($c1, $c2).Value2 = $arr
+        Set-SheetArray $wsT 1 1 $arr
 
         $wsA = $wbT.Worksheets.Item("Pump Bins")
         $wsA.Range("A1").Value2 = $title
