@@ -517,7 +517,21 @@ function Get-AllSords([string]$text) {
     $out = $seen[0]
     for ($i = 1; $i -lt $seen.Count; $i++) {
         $suf = ($seen[$i] -split '-', 2)[1]
+        if ($suf.Length -gt 4) { $suf = $suf.Substring($suf.Length - 4) }
         $out = $out + '_' + $suf
+    }
+    return $out
+}
+
+function Format-SordDisplay([string]$name) {
+    $m = [regex]::Match($name, 'SORD\d+-\d+(?:_\d+)*')
+    if (-not $m.Success) { return "" }
+    $parts = $m.Value -split '_'
+    $out = $parts[0]
+    for ($i = 1; $i -lt $parts.Count; $i++) {
+        $p = $parts[$i]
+        if ($p.Length -gt 4) { $p = $p.Substring($p.Length - 4) }
+        $out = $out + ', ' + $p
     }
     return $out
 }
@@ -621,7 +635,7 @@ function Get-ActiveGroupages {
 
     $byCustomer = @{}
     foreach ($f in $wpFiles) {
-        if ($f.Name -match '^WP\d+_(.+)_SORD\d+-\d+\.pdf$') {
+        if ($f.Name -match '^WP\d+_(.+)_SORD\d+-\d+(?:_\d+)*\.pdf$') {
             $key = $matches[1]
             if (-not $byCustomer.ContainsKey($key)) { $byCustomer[$key] = New-Object System.Collections.Generic.List[object] }
             $byCustomer[$key].Add($f)
@@ -722,7 +736,7 @@ function Invoke-GroupageCheck {
 
     $groups = @{}
     foreach ($f in $wpFiles) {
-        if ($f.Name -match '^WP\d+_(.+)_SORD\d+-\d+\.pdf$') {
+        if ($f.Name -match '^WP\d+_(.+)_SORD\d+-\d+(?:_\d+)*\.pdf$') {
             $key = $matches[1]
             if (-not $groups.ContainsKey($key)) { $groups[$key] = New-Object System.Collections.Generic.List[object] }
             $groups[$key].Add($f)
@@ -839,7 +853,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '0.0.9'
+$script:AppVersion = '1.0.0'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -1656,7 +1670,7 @@ function Invoke-Print {
         $pairsDirty = $false
         foreach ($f in $pacFiles) {
             $pacNum = if ($f.Name -match '^(PAC\d+)') { $matches[1] } else { $f.BaseName }
-            $sord = if ($f.Name -match 'SORD\d+-\d+') { $matches[0] } else { "" }
+            $sord = Format-SordDisplay $f.Name
             $pwsNum = $pairs[$pacNum]
             if (-not $pwsNum) {
                 $pwsNum = Get-PwsFromPdf $f.FullName
@@ -1678,7 +1692,7 @@ function Invoke-Print {
         foreach ($num in ($pwsByNum.Keys | Sort-Object)) {
             if (-not $usedPws[$num]) {
                 $f = $pwsByNum[$num]
-                $sord = if ($f.Name -match 'SORD\d+-\d+') { $matches[0] } else { "" }
+                $sord = Format-SordDisplay $f.Name
                 $detail = $num
                 if ($sord) { $detail = $detail + "   " + $sord }
                 $pairEntries.Add(@{ Id = $num; Detail = $detail; Paths = @($f.FullName); Src = $f })
@@ -2497,7 +2511,7 @@ function Invoke-Move {
         $usedPws = @{}
         foreach ($f in $pacFiles) {
             $pacNum = if ($f.Name -match '^(PAC\d+)') { $matches[1] } else { $f.BaseName }
-            $sord = if ($f.Name -match 'SORD\d+-\d+') { $matches[0] } else { "" }
+            $sord = Format-SordDisplay $f.Name
             $pwsNum = $pairs[$pacNum]
             if (-not $pwsNum) { $pwsNum = Get-PwsFromPdf $f.FullName }
             $paths = @()
@@ -2516,7 +2530,7 @@ function Invoke-Move {
         foreach ($num in ($pwsByNum.Keys | Sort-Object)) {
             if (-not $usedPws[$num]) {
                 $f = $pwsByNum[$num]
-                $sord = if ($f.Name -match 'SORD\d+-\d+') { $matches[0] } else { "" }
+                $sord = Format-SordDisplay $f.Name
                 $detail = $num
                 if ($sord) { $detail = $detail + " " + [char]0x2013 + " " + $sord }
                 $delEntries.Add(@{ Detail = $detail; Paths = @($f.FullName); Src = $f })
