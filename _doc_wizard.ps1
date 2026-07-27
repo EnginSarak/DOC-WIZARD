@@ -471,14 +471,53 @@ function Inflate([byte[]]$bytes) {
     return $null
 }
 
+$pdfOpRx = [regex]::new('/([A-Za-z0-9]+)\s+[\d.]+\s+Tf|\(((?:[^()\\]|\\.)*)\)\s*Tj|<([0-9A-Fa-f\s]+)>\s*Tj|\[((?:[^\[\]]|\\.)*)\]\s*TJ', [System.Text.RegularExpressions.RegexOptions]::Singleline)
+$pdfPieceRx = [regex]::new('\(((?:[^()\\]|\\.)*)\)|<([0-9A-Fa-f\s]+)>', [System.Text.RegularExpressions.RegexOptions]::Singleline)
+
+function Escape-PdfLit([string]$s) {
+    if (-not $s) { return '' }
+    $s = $s.Replace('\', '\\')
+    $s = $s.Replace('(', '\(')
+    $s = $s.Replace(')', '\)')
+    return $s
+}
+
 function Get-PdfText([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
     $s = $latin.GetString($bytes)
+    $page = Get-PageBody $s
+    $fontCache = @{}
     $sb = New-Object System.Text.StringBuilder
     foreach ($m in $streamRx.Matches($s)) {
-        $chunk = $latin.GetBytes($m.Groups[1].Value)
-        $dec = Inflate $chunk
-        if ($dec) { [void]$sb.Append($latin.GetString($dec)) }
+        $dec = Inflate ($latin.GetBytes($m.Groups[1].Value))
+        if (-not $dec) { continue }
+        $content = $latin.GetString($dec)
+        if ($content.IndexOf('Tj') -lt 0 -and $content.IndexOf('TJ') -lt 0) { continue }
+        $curFont = ''
+        foreach ($op in $pdfOpRx.Matches($content)) {
+            if ($op.Groups[1].Success) { $curFont = $op.Groups[1].Value; continue }
+            if ($op.Groups[2].Success) {
+                [void]$sb.Append('('); [void]$sb.Append($op.Groups[2].Value); [void]$sb.Append(")Tj`n")
+                continue
+            }
+            if ($op.Groups[3].Success) {
+                $map = Get-FontMap $s $page $curFont $fontCache
+                [void]$sb.Append('('); [void]$sb.Append((Escape-PdfLit (Convert-Hex $op.Groups[3].Value $map))); [void]$sb.Append(")Tj`n")
+                continue
+            }
+            if ($op.Groups[4].Success) {
+                $inner = New-Object System.Text.StringBuilder
+                foreach ($pc in $pdfPieceRx.Matches($op.Groups[4].Value)) {
+                    if ($pc.Groups[1].Success) { [void]$inner.Append($pc.Groups[1].Value) }
+                    elseif ($pc.Groups[2].Success) {
+                        $map = Get-FontMap $s $page $curFont $fontCache
+                        [void]$inner.Append((Escape-PdfLit (Convert-Hex $pc.Groups[2].Value $map)))
+                    }
+                }
+                [void]$sb.Append('('); [void]$sb.Append($inner.ToString()); [void]$sb.Append(")Tj`n")
+                continue
+            }
+        }
     }
     [void]$sb.Append($s)
     return $sb.ToString()
@@ -1838,29 +1877,46 @@ function Expand-ObjStream([string]$body) {
     if ($d) { return $latin.GetString($d) } else { return "" }
 }
 
-function Decode-Hex([string]$s, [string]$page, [string]$fname, [string]$hex) {
-    $fm = [regex]::Match($page, '/' + $fname + '\s+(\d+)\s+0\s+R')
-    if (-not $fm.Success) { return "" }
-    $fobj = Get-Obj $s ([int]$fm.Groups[1].Value)
-    $tm = [regex]::Match($fobj, '/ToUnicode\s+(\d+)\s+0\s+R')
-    if (-not $tm.Success) { return "" }
-    $cmap = Expand-ObjStream (Get-Obj $s ([int]$tm.Groups[1].Value))
-    $single = @{}
-    $bc = [regex]::Match($cmap, 'beginbfchar(.*?)endbfchar', [System.Text.RegularExpressions.RegexOptions]::Singleline)
-    if ($bc.Success) {
-        foreach ($m in [regex]::Matches($bc.Groups[1].Value, '<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>')) {
-            $u = $m.Groups[2].Value
-            if ($u.Length -gt 4) { $u = $u.Substring(0, 4) }
-            $single[[Convert]::ToInt32($m.Groups[1].Value, 16)] = [Convert]::ToInt32($u, 16)
+function Get-FontMap([string]$s, [string]$page, [string]$fname, [hashtable]$cache) {
+    if (-not $fname) { return $null }
+    if ($cache.ContainsKey($fname)) { return $cache[$fname] }
+    $result = $null
+    $ref = '/' + [regex]::Escape($fname) + '\s+(\d+)\s+0\s+R'
+    $fm = [regex]::Match($page, $ref)
+    if (-not $fm.Success) { $fm = [regex]::Match($s, $ref) }
+    if ($fm.Success) {
+        $fobj = Get-Obj $s ([int]$fm.Groups[1].Value)
+        $tm = [regex]::Match($fobj, '/ToUnicode\s+(\d+)\s+0\s+R')
+        if ($tm.Success) {
+            $cmap = Expand-ObjStream (Get-Obj $s ([int]$tm.Groups[1].Value))
+            $single = @{}
+            $bc = [regex]::Match($cmap, 'beginbfchar(.*?)endbfchar', [System.Text.RegularExpressions.RegexOptions]::Singleline)
+            if ($bc.Success) {
+                foreach ($m in [regex]::Matches($bc.Groups[1].Value, '<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>')) {
+                    $u = $m.Groups[2].Value
+                    if ($u.Length -gt 4) { $u = $u.Substring(0, 4) }
+                    $single[[Convert]::ToInt32($m.Groups[1].Value, 16)] = [Convert]::ToInt32($u, 16)
+                }
+            }
+            $ranges = New-Object System.Collections.Generic.List[object]
+            $br = [regex]::Match($cmap, 'beginbfrange(.*?)endbfrange', [System.Text.RegularExpressions.RegexOptions]::Singleline)
+            if ($br.Success) {
+                foreach ($m in [regex]::Matches($br.Groups[1].Value, '<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>')) {
+                    $ranges.Add(@{ A = [Convert]::ToInt32($m.Groups[1].Value, 16); B = [Convert]::ToInt32($m.Groups[2].Value, 16); U = [Convert]::ToInt32($m.Groups[3].Value, 16) })
+                }
+            }
+            $result = @{ Single = $single; Ranges = $ranges }
         }
     }
-    $ranges = New-Object System.Collections.Generic.List[object]
-    $br = [regex]::Match($cmap, 'beginbfrange(.*?)endbfrange', [System.Text.RegularExpressions.RegexOptions]::Singleline)
-    if ($br.Success) {
-        foreach ($m in [regex]::Matches($br.Groups[1].Value, '<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>')) {
-            $ranges.Add(@{ A = [Convert]::ToInt32($m.Groups[1].Value, 16); B = [Convert]::ToInt32($m.Groups[2].Value, 16); U = [Convert]::ToInt32($m.Groups[3].Value, 16) })
-        }
-    }
+    $cache[$fname] = $result
+    return $result
+}
+
+function Convert-Hex([string]$hex, $map) {
+    if (-not $map) { return '' }
+    $hex = $hex -replace '\s', ''
+    $single = $map.Single
+    $ranges = $map.Ranges
     $sb = New-Object System.Text.StringBuilder
     for ($i = 0; $i + 4 -le $hex.Length; $i += 4) {
         $g = [Convert]::ToInt32($hex.Substring($i, 4), 16)
