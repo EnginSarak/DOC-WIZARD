@@ -482,16 +482,29 @@ function Escape-PdfLit([string]$s) {
     return $s
 }
 
+$pdfHexRx = [regex]::new('<[0-9A-Fa-f]{6,}>\s*T[jJ]', [System.Text.RegularExpressions.RegexOptions]::None)
+
 function Get-PdfText([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
     $s = $latin.GetString($bytes)
-    $page = Get-PageBody $s
-    $fontCache = @{}
-    $sb = New-Object System.Text.StringBuilder
+    $contents = New-Object System.Collections.Generic.List[string]
+    $needDecode = $false
     foreach ($m in $streamRx.Matches($s)) {
         $dec = Inflate ($latin.GetBytes($m.Groups[1].Value))
         if (-not $dec) { continue }
-        $content = $latin.GetString($dec)
+        $c = $latin.GetString($dec)
+        $contents.Add($c)
+        if (-not $needDecode -and ($c.IndexOf('Tj') -ge 0 -or $c.IndexOf('TJ') -ge 0) -and $pdfHexRx.IsMatch($c)) { $needDecode = $true }
+    }
+    $sb = New-Object System.Text.StringBuilder
+    if (-not $needDecode) {
+        foreach ($c in $contents) { [void]$sb.Append($c) }
+        [void]$sb.Append($s)
+        return $sb.ToString()
+    }
+    $page = Get-PageBody $s
+    $fontCache = @{}
+    foreach ($content in $contents) {
         if ($content.IndexOf('Tj') -lt 0 -and $content.IndexOf('TJ') -lt 0) { continue }
         $curFont = ''
         foreach ($op in $pdfOpRx.Matches($content)) {
