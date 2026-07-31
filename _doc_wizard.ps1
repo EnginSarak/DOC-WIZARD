@@ -2041,6 +2041,12 @@ function Score-Name([string]$a, [string]$b) {
     return 0
 }
 
+function Get-MatchLocation([hashtable]$info) {
+    if ($info.Location) { return $info.Location }
+    if ($info.DestText) { return $info.DestText }
+    return $info.SiteText
+}
+
 function Find-BestBase([string]$root, [hashtable]$info) {
     if (-not $info.Country) { return $root }
     $countryDir = $null
@@ -2048,8 +2054,7 @@ function Find-BestBase([string]$root, [hashtable]$info) {
         if ((Score-Country $cd.Name $info.Country) -ge 1) { $countryDir = $cd.FullName; break }
     }
     if (-not $countryDir) { return $root }
-    $site = $info.DestText
-    if (-not $site) { $site = $info.SiteText }
+    $site = Get-MatchLocation $info
     $best = $null; $bestScore = 0
     foreach ($ud in (Get-ChildItem -LiteralPath $countryDir -Directory -ErrorAction SilentlyContinue)) {
         $sc = (Score-Name $info.Customer $ud.Name) + (Score-FolderSite $ud.Name $site) * 15
@@ -2256,13 +2261,14 @@ function Resolve-CreateTarget([string]$cur, [int]$month, [string]$year) {
 function Resolve-StartFolder([string]$root, [hashtable]$info) {
     $start = Find-BestBase $root $info
     if ($start -eq $root) { return $root }
+    $locMatch = Get-MatchLocation $info
     for ($d = 0; $d -lt 6; $d++) {
         $children = @(Get-ChildItem -LiteralPath $start -Directory -ErrorAction SilentlyContinue)
         if ($children.Count -eq 0) { break }
         $bestChild = $null; $bestScore = 0; $bestMy = 0
         foreach ($c in $children) {
             $my = Test-FolderMonth $c.Name $info.Month $info.Year
-            $si = Score-FolderSite $c.Name $info.SiteText
+            $si = Score-FolderSite $c.Name $locMatch
             $cu = 0
             if ((Score-Name $info.Customer $c.Name) -ge 40) { $cu = 1 }
             $sc = $my * 10 + $si * 2 + $cu * 3
@@ -2370,7 +2376,7 @@ function Move-FileSafe([string]$src, [string]$dest) {
 function Move-PairInteractive([string]$root, [string]$startDir, [string]$title, [hashtable]$info, [string[]]$files) {
     $month = $info.Month
     $year = $info.Year
-    $siteText = $info.SiteText
+    $siteText = Get-MatchLocation $info
     $cur = $startDir
     if (-not (Test-Path -LiteralPath $cur)) { $cur = $root }
     $suggest = $MonthsDE[$month - 1] + " " + $year
