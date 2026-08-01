@@ -2410,10 +2410,6 @@ function Move-PairInteractive([string]$root, [string]$startDir, [string]$title, 
         $entries.Add(@{ Text = ""; Header = $true })
         $entries.Add(@{ Text = ("Current: " + $cur); Header = $true })
         $entries.Add(@{ Text = ""; Header = $true })
-        $entries.Add(@{ Text = "[ Move here ]"; Header = $false; Act = "SELECT" })
-        if ($cur.TrimEnd('\').Length -gt $root.TrimEnd('\').Length) {
-            $entries.Add(@{ Text = "[ .. up ]"; Header = $false; Act = "UP" })
-        }
         $ct = Resolve-CreateTarget $cur $month $year
         $createParent = $ct.Parent
         $needYear = $ct.NeedYear
@@ -2427,7 +2423,25 @@ function Move-PairInteractive([string]$root, [string]$startDir, [string]$title, 
         } else {
             $createHint = ""
         }
-        $entries.Add(@{ Text = ("[ + Create folder: " + $suggest + " ]" + $createHint); Header = $false; Act = "CREATE" })
+
+        $monthExists = $false
+        if (-not $needYear) {
+            if ((Test-FolderMonth (Split-Path $cur -Leaf) $month $year) -ge 2) {
+                $monthExists = $true
+            } else {
+                foreach ($d in @(Get-ChildItem -LiteralPath $effContainer -Directory -ErrorAction SilentlyContinue)) {
+                    if ((Test-FolderMonth $d.Name $month $year) -ge 2) { $monthExists = $true; break }
+                }
+            }
+        }
+        $createEntry = @{ Text = ("[ + Create folder: " + $suggest + " ]" + $createHint); Header = $false; Act = "CREATE" }
+
+        if (-not $monthExists) { $entries.Add($createEntry) }
+        $entries.Add(@{ Text = "[ Move here ]"; Header = $false; Act = "SELECT" })
+        if ($cur.TrimEnd('\').Length -gt $root.TrimEnd('\').Length) {
+            $entries.Add(@{ Text = "[ .. up ]"; Header = $false; Act = "UP" })
+        }
+        if ($monthExists) { $entries.Add($createEntry) }
         $entries.Add(@{ Text = "[ + New folder here (own name) ]"; Header = $false; Act = "NEWDIR" })
         $entries.Add(@{ Text = "[ Change root folder ]"; Header = $false; Act = "ROOT" })
         $entries.Add(@{ Text = "[ Back to list ]"; Header = $false; Act = "SKIP" })
