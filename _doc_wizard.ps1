@@ -1397,7 +1397,7 @@ function Invoke-Rename {
     Write-Host ("     Missing pairs  : " + $missingPairs) -ForegroundColor $pairColor
 }
 
-function Add-Stamp([string]$path, [string[]]$lines) {
+function Add-Stamp([string]$path, [string[]]$lines, [int]$x = 495) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
     $s = $latin.GetString($bytes)
 
@@ -1433,7 +1433,6 @@ function Add-Stamp([string]$path, [string[]]$lines) {
     $font = [regex]::Match($pageBody, '/Font\s*<<\s*/([A-Za-z0-9]+)').Groups[1].Value
     if (-not $font) { $font = "F1" }
 
-    $x = 495
     $y = 560
     $size = 14
     $lh = 22
@@ -1551,7 +1550,7 @@ function Invoke-Annotate {
 
     $sspin = Start-Spin ("stamping " + $docName + "...")
     try {
-        Add-Stamp $file $lines.ToArray()
+        Add-Stamp $file $lines.ToArray() 380
         Stop-Spin $sspin
         Write-Host ("   Saved. Stamped " + $lines.Count + " line(s) onto page 1 of") -ForegroundColor Green
         Write-Host ("   " + $docName) -ForegroundColor Green
@@ -1958,6 +1957,133 @@ function Invoke-FuScan {
     Write-Host ("   Skipped : " + $skipped) -ForegroundColor DarkGray
     $failColor = if ($failed -gt 0) { "Red" } else { "DarkGray" }
     Write-Host ("   Errors  : " + $failed) -ForegroundColor $failColor
+}
+
+function Get-FuMoveInfo($f) {
+    $text = Get-OcrPageText $f.FullName
+    $lines = @($text -split '\r?\n')
+
+    $destLines = New-Object System.Collections.Generic.List[string]
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -notmatch '(?i)destinat') { continue }
+        for ($j = $i + 1; $j -lt $lines.Count -and $destLines.Count -lt 6; $j++) {
+            $v = $lines[$j].Trim()
+            if (-not $v) { continue }
+            if ($v -match '(?i)^(product|reference|descript|notes|carrier|gross|q\.?ty|u\.?m)') { break }
+            $v = ($v -replace '(?i)marienh\S*|siegen|\(?57080\)?|pick.?up|addres+\w*|aderes+\w*', ' ').Trim()
+            if (-not $v) { continue }
+            $destLines.Add($v)
+        }
+        break
+    }
+    $destText = ($destLines -join "`n")
+
+    $country = ''
+    foreach ($mm in [regex]::Matches($destText, '\b([A-Z]{2})\b')) {
+        $cc = $mm.Groups[1].Value
+        if ($IsoCountry.ContainsKey($cc)) { $country = $cc }
+    }
+
+    $addr = New-Object System.Collections.Generic.List[string]
+    foreach ($dl in $destLines) {
+        if ($dl -match '^\d{1,3}$') { continue }
+        $addr.Add($dl)
+    }
+    while ($addr.Count -gt 1 -and $addr[$addr.Count - 1] -match '^[A-Z]{2}$') { $addr.RemoveAt($addr.Count - 1) }
+    $location = ''
+    if ($addr.Count -gt 0) {
+        $location = $addr[$addr.Count - 1]
+        while ($location -match '\s+[A-Z]{2}\s*$') { $location = ([regex]::Replace($location, '\s+[A-Z]{2}\s*$', '')).Trim() }
+    }
+
+    $month = 0
+    $year = ''
+    $dm = [regex]::Match($text, '(\d{2})\.(\d{2})\.(\d{4})')
+    if ($dm.Success) { $month = [int]$dm.Groups[2].Value; $year = $dm.Groups[3].Value }
+    if (($month -lt 1 -or $month -gt 12) -and $f.BaseName -match '_(\d{2})(\d{2})(\d{2})(\s*\(\d+\))?$') {
+        $year = '20' + $matches[1]
+        $month = [int]$matches[2]
+    }
+    if ($month -lt 1 -or $month -gt 12 -or -not $year) {
+        $month = (Get-Date).Month
+        $year = (Get-Date).Year.ToString()
+    }
+
+    $kunde = ''
+    $km = [regex]::Match($f.BaseName, '^' + [regex]::Escape($FuPrefix) + '_(.+?)_(?:SORD|TRN)')
+    if ($km.Success) { $kunde = $km.Groups[1].Value -replace '_', ' ' }
+    if (-not $kunde) {
+        $fi = Get-FuInfo $text
+        if ($fi.Kunde) { $kunde = $fi.Kunde -replace '_', ' ' }
+    }
+
+    return @{ Customer = $kunde; Month = $month; Year = $year; SiteText = $text; Country = $country; DestText = $destText; Location = $location }
+}
+
+function Invoke-FuMove {
+    $root = Get-RootFolder
+    if (-not $root) {
+        Write-Host "  No root folder selected." -ForegroundColor Yellow
+        return
+    }
+    $scan = Get-OrAskFolder 'SCANDIR' "Select the Halle M SCAN folder (signed delivery documents)"
+    if (-not $scan) {
+        Write-Host "  No scan folder selected." -ForegroundColor Yellow
+        return
+    }
+
+    $moved = 0
+    while ($true) {
+        $fuFiles = @(Get-ChildItem -LiteralPath $scan -Filter ($FuPrefix + '_*.pdf') -ErrorAction SilentlyContinue | Sort-Object Name)
+
+        $entries = New-Object System.Collections.Generic.List[object]
+        $entries.Add(@{ Text = ($FuPrefix + " documents   (to customer folder)      (beta)"); Header = $true })
+        if ($fuFiles.Count -eq 0) { $entries.Add(@{ Text = "(none)"; Header = $true }) }
+        foreach ($f in $fuFiles) {
+            $entries.Add(@{ Text = $f.Name; Header = $false; Act = 'FU'; File = $f })
+        }
+        $entries.Add(@{ Text = ""; Header = $true })
+        $entries.Add(@{ Text = "Back"; Header = $false; Act = 'BACK' })
+
+        $sel = Show-DocMenu ("MOVE " + $FuPrefix + " DOCUMENTS") $entries.ToArray()
+        if ($sel -lt 0) { break }
+        $e = $entries[$sel]
+        if ($e.Act -eq 'BACK') { break }
+
+        $f = $e.File
+        $spin = Start-Spin ("reading " + $f.Name + " (OCR)...")
+        $info = $null
+        $err = ''
+        try { $info = Get-FuMoveInfo $f } catch { $err = $_.Exception.GetBaseException().Message }
+        Stop-Spin $spin
+        if (-not $info) {
+            Write-Host ("  ERROR reading " + $f.Name + ": " + $err) -ForegroundColor Red
+            Write-Host ""
+            Write-Host "   Press any key to continue..." -ForegroundColor DarkGray
+            [void][Console]::ReadKey($true)
+            continue
+        }
+
+        $monthLabel = $MonthsDE[$info.Month - 1] + " " + $info.Year
+        $cust = $info.Customer
+        if (-not $cust) { $cust = "(unknown customer)" }
+        $title = $cust + "   (" + $f.Name + ")    Date: " + $monthLabel
+        $start = Resolve-StartFolder $root $info
+        $res = Move-PairInteractive $root $start $title $info @($f.FullName)
+        if ($res -eq "MOVED") {
+            $moved++
+            Write-Host ""
+            Write-Host "   Press any key to continue..." -ForegroundColor DarkGray
+            [void][Console]::ReadKey($true)
+        }
+    }
+
+    Clear-Host
+    Show-Header
+    Write-Host ""
+    Write-Host $light -ForegroundColor DarkCyan
+    Write-Host "   MOVE SUMMARY" -ForegroundColor Cyan
+    Write-Host ("     Files moved : " + $moved) -ForegroundColor Green
 }
 
 function Invoke-Print {
@@ -3122,7 +3248,8 @@ function Invoke-Settings([bool]$requireAll) {
 }
 
 $FuMenuLabel = $FuPrefix + " scan   (beta)"
-$mainItems = @("Auto rename/create documents", "Annotate WP documents", "Print", "Auto move to folders", $FuMenuLabel, "Settings", "", "Quit")
+$FuMoveLabel = "Auto move " + $FuPrefix + " documents   (beta)"
+$mainItems = @("Auto rename/create documents", "Annotate WP documents", "Print", "Auto move to folders", $FuMenuLabel, $FuMoveLabel, "Settings", "", "Quit")
 
 $cfgWork = Get-Setting 'WORKDIR'
 if ($cfgWork -and (Test-Path -LiteralPath $cfgWork)) { $WorkDir = $cfgWork.TrimEnd('\') }
@@ -3156,6 +3283,7 @@ try {
             "Print"                 { Invoke-Print }
             "Auto move to folders"  { Invoke-Move }
             $FuMenuLabel            { Invoke-FuScan }
+            $FuMoveLabel            { Invoke-FuMove }
             "Settings"              { Invoke-Settings $false }
         }
 
