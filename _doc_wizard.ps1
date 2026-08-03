@@ -55,6 +55,8 @@ function Get-BannerArt {
 
 $light = "  " + ([string][char]0x2500 * 68)
 
+$FuPrefix = "F" + [char]0x00DC
+
 $MonthsDE = @('Januar', 'Februar', ("M" + [char]0x00E4 + "rz"), 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember')
 $MonthsEN = @('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December')
 $MonthAbbrDE = @('Jan', 'Feb', 'Mrz', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez')
@@ -1697,6 +1699,263 @@ function Print-Pdf([string]$path, [string]$printerName, [int]$copies) {
     foreach ($b in $bitmaps) { $b.Dispose() }
 }
 
+function Get-OcrPageText([string]$path) {
+    Add-Type -AssemblyName System.Runtime.WindowsRuntime | Out-Null
+
+    $asOp = [System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
+        $_.Name -eq 'AsTask' -and $_.IsGenericMethodDefinition -and $_.GetParameters().Count -eq 1 -and
+        $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1'
+    } | Select-Object -First 1
+
+    $asAct = [System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
+        $_.Name -eq 'AsTask' -and -not $_.IsGenericMethodDefinition -and $_.GetParameters().Count -eq 1 -and
+        $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncAction'
+    } | Select-Object -First 1
+
+    [void][Windows.Data.Pdf.PdfDocument, Windows.Data.Pdf, ContentType = WindowsRuntime]
+    [void][Windows.Storage.Streams.InMemoryRandomAccessStream, Windows.Storage.Streams, ContentType = WindowsRuntime]
+    [void][Windows.Data.Pdf.PdfPageRenderOptions, Windows.Data.Pdf, ContentType = WindowsRuntime]
+    [void][Windows.Graphics.Imaging.BitmapDecoder, Windows.Graphics.Imaging, ContentType = WindowsRuntime]
+    [void][Windows.Graphics.Imaging.SoftwareBitmap, Windows.Graphics.Imaging, ContentType = WindowsRuntime]
+    [void][Windows.Media.Ocr.OcrEngine, Windows.Media.Ocr, ContentType = WindowsRuntime]
+    [void][Windows.Media.Ocr.OcrResult, Windows.Media.Ocr, ContentType = WindowsRuntime]
+    [void][Windows.Globalization.Language, Windows.Globalization, ContentType = WindowsRuntime]
+
+    $engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromUserProfileLanguages()
+    if (-not $engine) {
+        foreach ($lt in @('de-DE', 'en-US')) {
+            try {
+                $lang = New-Object Windows.Globalization.Language($lt)
+                $engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromLanguage($lang)
+            } catch { }
+            if ($engine) { break }
+        }
+    }
+    if (-not $engine) { throw "Windows OCR is not available on this PC." }
+
+    $bytes = [System.IO.File]::ReadAllBytes($path)
+    $ms = New-Object System.IO.MemoryStream
+    $ms.Write($bytes, 0, $bytes.Length)
+    $ms.Position = 0
+    $inStream = [System.IO.WindowsRuntimeStreamExtensions]::AsRandomAccessStream($ms)
+
+    $pdfOp = [Windows.Data.Pdf.PdfDocument]::LoadFromStreamAsync($inStream)
+    $pdfTask = $asOp.MakeGenericMethod([Windows.Data.Pdf.PdfDocument]).Invoke($null, @($pdfOp))
+    $pdfTask.Wait(-1) | Out-Null
+    $pdf = $pdfTask.Result
+    if ($pdf.PageCount -lt 1) { throw "The PDF has no pages." }
+
+    $page = $pdf.GetPage([uint32]0)
+    $ras = New-Object Windows.Storage.Streams.InMemoryRandomAccessStream
+    $opts = New-Object Windows.Data.Pdf.PdfPageRenderOptions
+    $maxDim = [double][Windows.Media.Ocr.OcrEngine]::MaxImageDimension
+    $scale = 3.0
+    if ($page.Size.Width * $scale -gt $maxDim) { $scale = $maxDim / $page.Size.Width }
+    if ($page.Size.Height * $scale -gt $maxDim) { $scale = $maxDim / $page.Size.Height }
+    $opts.DestinationWidth = [uint32]([math]::Floor($page.Size.Width * $scale))
+    $renderAct = $page.RenderToStreamAsync($ras, $opts)
+    $renderTask = $asAct.Invoke($null, @($renderAct))
+    $renderTask.Wait(-1) | Out-Null
+
+    $ras.Seek(0)
+    $decOp = [Windows.Graphics.Imaging.BitmapDecoder]::CreateAsync($ras)
+    $decTask = $asOp.MakeGenericMethod([Windows.Graphics.Imaging.BitmapDecoder]).Invoke($null, @($decOp))
+    $decTask.Wait(-1) | Out-Null
+    $decoder = $decTask.Result
+
+    $bmpOp = $decoder.GetSoftwareBitmapAsync([Windows.Graphics.Imaging.BitmapPixelFormat]::Bgra8, [Windows.Graphics.Imaging.BitmapAlphaMode]::Premultiplied)
+    $bmpTask = $asOp.MakeGenericMethod([Windows.Graphics.Imaging.SoftwareBitmap]).Invoke($null, @($bmpOp))
+    $bmpTask.Wait(-1) | Out-Null
+    $bitmap = $bmpTask.Result
+
+    $ocrOp = $engine.RecognizeAsync($bitmap)
+    $ocrTask = $asOp.MakeGenericMethod([Windows.Media.Ocr.OcrResult]).Invoke($null, @($ocrOp))
+    $ocrTask.Wait(-1) | Out-Null
+    $result = $ocrTask.Result
+
+    $sb = New-Object System.Text.StringBuilder
+    foreach ($ln in $result.Lines) {
+        [void]$sb.AppendLine($ln.Text)
+    }
+    try { $bitmap.Dispose() } catch { }
+    try { $page.Dispose() } catch { }
+    try { $ras.Dispose() } catch { }
+    try { $inStream.Dispose() } catch { }
+    try { $ms.Dispose() } catch { }
+    return $sb.ToString()
+}
+
+function ConvertTo-FuKunde([string]$s) {
+    if (-not $s) { return '' }
+    $s = $s -replace '(?i)\bPW[S5]\S*', ' '
+    $s = $s -replace '\d{1,2}\s*[.,]\s*\d{1,2}\s*[.,]\s*\d{2,4}', ' '
+    $s = $s -replace '[\\/:*?"<>|.,]', ' '
+    $parts = @($s -split '\s+' | Where-Object { $_ -ne '' -and $_ -notmatch '^[&+]+$' -and $_ -notmatch '^(?i)(and|und)$' })
+    $junk = '^(?i)(pick(-?up)?|te[ck]up|addres+\w*|aderes+\w*|adres+\w*|transport|reason|shipment|method|incoterms|carrier|truck|destination|customer|delivery|note|page|doc|type|no|date|via|exw|dap|ddp|fca|cpt|cip)$'
+    $start = 0
+    while ($start -lt $parts.Count) {
+        $t = $parts[$start]
+        $letters = $t -replace '[^A-Za-z]', ''
+        if ($letters.Length -ge 3 -and $t -cmatch '^[A-Z]' -and $t -notmatch $junk) { break }
+        $start++
+    }
+    if ($start -ge $parts.Count) { return '' }
+    $parts = @($parts)[$start..($parts.Count - 1)]
+    $merged = New-Object System.Collections.Generic.List[string]
+    foreach ($t in $parts) {
+        if ($merged.Count -gt 0 -and $merged[$merged.Count - 1].Length -le 2 -and $t.Length -le 2) {
+            $merged[$merged.Count - 1] = $merged[$merged.Count - 1] + $t
+        } else {
+            $merged.Add($t)
+        }
+    }
+    if ($merged.Count -eq 0) { return '' }
+    $take = [math]::Min(2, $merged.Count)
+    return (@($merged)[0..($take - 1)] -join '_')
+}
+
+function Get-FuInfo([string]$ocrText) {
+    $res = @{ IsFu = $false; Kunde = ''; Order = '' }
+    if (-not $ocrText) { return $res }
+
+    $hasDn = $ocrText -match '(?i)Delivery\s*Note'
+    $hasPws = $ocrText -match '(?i)PW[S5]\s*[0-9O]{4,}'
+
+    $orders = New-Object System.Collections.Generic.List[string]
+    $prefixRx = [regex]'(?i)\b(?:S[O0]RD[ \t]*(\d{2})|(TRN)[ \t]*[-.]?[ \t]*[O0]RD)[ \t]*[-.:]?[ \t]*'
+    foreach ($m in $prefixRx.Matches($ocrText)) {
+        $isTrn = $m.Groups[2].Success
+        $sufPat = '0\d{4}'
+        if ($isTrn) { $sufPat = '0\d{3,5}' }
+        $tailStart = $m.Index + $m.Length
+        $tailLen = [math]::Min(90, $ocrText.Length - $tailStart)
+        if ($tailLen -le 0) { continue }
+        $tail = $ocrText.Substring($tailStart, $tailLen)
+        $sm = [regex]::Match($tail, '^(' + $sufPat + ')\b')
+        if (-not $sm.Success) { $sm = [regex]::Match($tail, '\b(' + $sufPat + ')\b') }
+        if (-not $sm.Success) { continue }
+        $v = 'SORD' + $m.Groups[1].Value + '-' + $sm.Groups[1].Value
+        if ($isTrn) { $v = 'TRN-ORD-' + $sm.Groups[1].Value }
+        if (-not $orders.Contains($v)) { $orders.Add($v) }
+    }
+    if (-not ($hasDn -and $hasPws -and $orders.Count -gt 0)) { return $res }
+
+    $lines = @($ocrText -split '\r?\n')
+    $kunde = ''
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $ln = $lines[$i]
+        if ($ln -notmatch '(?i)\bCustomer\b') { continue }
+        if ($ln -match "(?i)Customer\W{0,2}s\b") { continue }
+        if ($ln -match '(?i)Customer\s+Code') { continue }
+        $idx = $ln.ToUpper().LastIndexOf('CUSTOMER')
+        $kunde = ConvertTo-FuKunde ($ln.Substring($idx + 8))
+        if (-not $kunde -and $i + 1 -lt $lines.Count) { $kunde = ConvertTo-FuKunde $lines[$i + 1] }
+        if ($kunde) { break }
+    }
+    if (-not $kunde) {
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+            $ln = $lines[$i]
+            if ($ln -notmatch '(?i)\bDestination\b') { continue }
+            $idx = $ln.ToUpper().LastIndexOf('DESTINATION')
+            $kunde = ConvertTo-FuKunde ($ln.Substring($idx + 11))
+            if (-not $kunde -and $i + 1 -lt $lines.Count) { $kunde = ConvertTo-FuKunde $lines[$i + 1] }
+            if ($kunde) { break }
+        }
+    }
+    if (-not $kunde) { return $res }
+    $res.Kunde = $kunde
+
+    $out = $orders[0]
+    for ($i = 1; $i -lt $orders.Count; $i++) {
+        $dm = [regex]::Match($orders[$i], '(\d+)\s*$')
+        $suf = $dm.Groups[1].Value
+        if ($suf.Length -gt 3) { $suf = $suf.Substring($suf.Length - 3) }
+        $out = $out + '_' + $suf
+    }
+    $res.Order = $out
+    $res.IsFu = $true
+    return $res
+}
+
+function Invoke-FuScan {
+    $scan = Get-OrAskFolder 'SCANDIR' "Select the Halle M SCAN folder (signed delivery documents)"
+    if (-not $scan) {
+        Write-Host "  No scan folder selected." -ForegroundColor Yellow
+        return
+    }
+
+    $cands = @(Get-ChildItem -LiteralPath $scan -Filter '*.pdf' -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -match '^doc' } | Sort-Object LastWriteTime -Descending)
+    if ($cands.Count -eq 0) {
+        Write-Host "  No new scanned documents (doc*.pdf) found in:" -ForegroundColor Yellow
+        Write-Host ("  " + $scan) -ForegroundColor DarkGray
+        return
+    }
+
+    Write-Host ("  " + $cands.Count + " scanned document(s) to check.   (beta)") -ForegroundColor DarkCyan
+
+    $renamed = 0
+    $skipped = 0
+    $failed = 0
+    foreach ($f in $cands) {
+        $spin = Start-Spin ("reading " + $f.Name + " (OCR)...")
+        $text = $null
+        $err = ''
+        $ok = $true
+        try { $text = Get-OcrPageText $f.FullName } catch { $ok = $false; $err = $_.Exception.GetBaseException().Message }
+        Stop-Spin $spin
+        if (-not $ok) {
+            Write-Host ("  ERROR reading " + $f.Name + ": " + $err) -ForegroundColor Red
+            $failed++
+            continue
+        }
+
+        $info = Get-FuInfo $text
+        if (-not $info.IsFu) {
+            Write-Host ("  skipped (no " + $FuPrefix + " recognized): " + $f.Name) -ForegroundColor DarkGray
+            $skipped++
+            continue
+        }
+
+        $datum = $f.LastWriteTime.ToString('yyMMdd')
+        $baseName = $FuPrefix + "_" + $info.Kunde + "_" + $info.Order + "_" + $datum + ".pdf"
+        $newName = $baseName
+        $target = Join-Path $scan $newName
+        $n = 2
+        while (Test-Path -LiteralPath $target) {
+            $stem = [System.IO.Path]::GetFileNameWithoutExtension($baseName)
+            $newName = $stem + " (" + $n + ").pdf"
+            $target = Join-Path $scan $newName
+            $n++
+        }
+
+        Write-Host ""
+        Write-Host ("  " + $f.Name) -ForegroundColor Cyan
+        Write-Host ("    ->  " + $newName) -ForegroundColor Yellow
+        $ans = Read-Host "  Rename? (Y/N)"
+        if ($ans -match '^\s*[yj]') {
+            try {
+                Move-Item -LiteralPath $f.FullName -Destination $target
+                Write-Host "    renamed." -ForegroundColor Green
+                $renamed++
+            } catch {
+                Write-Host ("    ERROR: " + $_.Exception.Message) -ForegroundColor Red
+                $failed++
+            }
+        } else {
+            Write-Host "    skipped." -ForegroundColor DarkGray
+            $skipped++
+        }
+    }
+
+    Write-Host ""
+    Write-Host $light -ForegroundColor DarkCyan
+    Write-Host ("   Renamed : " + $renamed) -ForegroundColor Green
+    Write-Host ("   Skipped : " + $skipped) -ForegroundColor DarkGray
+    $failColor = if ($failed -gt 0) { "Red" } else { "DarkGray" }
+    Write-Host ("   Errors  : " + $failed) -ForegroundColor $failColor
+}
+
 function Invoke-Print {
     $printer = Get-Setting 'PRINTER'
     $valid = $false
@@ -2812,6 +3071,7 @@ function Invoke-Settings([bool]$requireAll) {
         $entries.Add(@{ Text = ("Pick list folder".PadRight(24) + ":  " + (Format-Setting $s['PICKLIST'] 46)); Header = $false; Act = 'PICKLIST'; Done = [bool]$s['PICKLIST'] })
         $entries.Add(@{ Text = ("'Noch zu drucken' folder".PadRight(24) + ":  " + (Format-Setting $s['REPRINT'] 46)); Header = $false; Act = 'REPRINT'; Done = [bool]$s['REPRINT'] })
         $entries.Add(@{ Text = ("Pump control folder".PadRight(24) + ":  " + (Format-Setting $s['PUMPCONTROL'] 46)); Header = $false; Act = 'PUMPCONTROL'; Done = [bool]$s['PUMPCONTROL'] })
+        $entries.Add(@{ Text = ("Halle M scan folder".PadRight(24) + ":  " + (Format-Setting $s['SCANDIR'] 40) + "   (beta)"); Header = $false; Act = 'SCANDIR'; Done = [bool]$s['SCANDIR'] })
         $bIdx = 0
         if ($s['BANNER'] -match '^\d+$') { $bIdx = [int]$s['BANNER'] }
         if ($bIdx -lt 0 -or $bIdx -ge $BannerStyles.Count) { $bIdx = 0 }
@@ -2839,6 +3099,7 @@ function Invoke-Settings([bool]$requireAll) {
             'PICKLIST' { $p = Browse-ForFolder "Select the PICK LIST folder"; if ($p) { Set-Setting 'PICKLIST' $p } }
             'REPRINT'  { $p = Browse-ForFolder "Select the 'Noch zu drucken' folder"; if ($p) { Set-Setting 'REPRINT' $p } }
             'PUMPCONTROL' { $p = Browse-ForFolder "Select the PUMP CONTROL folder"; if ($p) { Set-Setting 'PUMPCONTROL' $p } }
+            'SCANDIR'  { $p = Browse-ForFolder "Select the Halle M SCAN folder (signed delivery documents)"; if ($p) { Set-Setting 'SCANDIR' $p } }
             'WORKDIR'  {
                 $p = Browse-ForFolder "Select the DOWNLOADS folder (where the PDFs are downloaded)"
                 if ($p) { Set-Setting 'WORKDIR' $p; $script:WorkDir = $p.TrimEnd('\') }
@@ -2856,7 +3117,8 @@ function Invoke-Settings([bool]$requireAll) {
     }
 }
 
-$mainItems = @("Auto rename/create documents", "Annotate WP documents", "Print", "Auto move to folders", "Settings", "", "Quit")
+$FuMenuLabel = $FuPrefix + " scan   (beta)"
+$mainItems = @("Auto rename/create documents", "Annotate WP documents", "Print", "Auto move to folders", $FuMenuLabel, "Settings", "", "Quit")
 
 $cfgWork = Get-Setting 'WORKDIR'
 if ($cfgWork -and (Test-Path -LiteralPath $cfgWork)) { $WorkDir = $cfgWork.TrimEnd('\') }
@@ -2889,6 +3151,7 @@ try {
             "Annotate WP documents" { Invoke-Annotate }
             "Print"                 { Invoke-Print }
             "Auto move to folders"  { Invoke-Move }
+            $FuMenuLabel            { Invoke-FuScan }
             "Settings"              { Invoke-Settings $false }
         }
 
