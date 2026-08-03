@@ -1818,8 +1818,9 @@ function Get-FuInfo([string]$ocrText) {
     $res = @{ IsFu = $false; Kunde = ''; Order = '' }
     if (-not $ocrText) { return $res }
 
-    $hasDn = $ocrText -match '(?i)Delivery\s*Note'
-    $hasPws = $ocrText -match '(?i)PW[S5]\s*[0-9O]{4,}'
+    $hasDn = $ocrText -match '(?i)Deliv'
+    $hasPws = $ocrText -match '(?i)PW[S5]'
+    $hasAx = $ocrText -match '(?i)AX[I1l]UM'
 
     $orders = New-Object System.Collections.Generic.List[string]
     $prefixRx = [regex]'(?i)\b(?:S[O0]RD[ \t]*(\d{2})|(TRN)[ \t]*[-.]?[ \t]*[O0]RD)[ \t]*[-.:]?[ \t]*'
@@ -1838,26 +1839,29 @@ function Get-FuInfo([string]$ocrText) {
         if ($isTrn) { $v = 'TRN-ORD-' + $sm.Groups[1].Value }
         if (-not $orders.Contains($v)) { $orders.Add($v) }
     }
-    if (-not ($hasDn -and $hasPws -and $orders.Count -gt 0)) { return $res }
+    if ($orders.Count -eq 0) { return $res }
+    if (-not ($hasDn -or $hasPws -or $hasAx)) { return $res }
 
     $lines = @($ocrText -split '\r?\n')
     $kunde = ''
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $ln = $lines[$i]
-        if ($ln -notmatch '(?i)\bCustomer\b') { continue }
-        if ($ln -match "(?i)Customer\W{0,2}s\b") { continue }
-        if ($ln -match '(?i)Customer\s+Code') { continue }
-        $idx = $ln.ToUpper().LastIndexOf('CUSTOMER')
-        $kunde = ConvertTo-FuKunde ($ln.Substring($idx + 8))
+        $dms = [regex]::Matches($ln, '(?i)destinat[a-z]*')
+        if ($dms.Count -eq 0) { continue }
+        $dm = $dms[$dms.Count - 1]
+        $kunde = ConvertTo-FuKunde ($ln.Substring($dm.Index + $dm.Length))
         if (-not $kunde -and $i + 1 -lt $lines.Count) { $kunde = ConvertTo-FuKunde $lines[$i + 1] }
+        if (-not $kunde -and $i + 2 -lt $lines.Count) { $kunde = ConvertTo-FuKunde $lines[$i + 2] }
         if ($kunde) { break }
     }
     if (-not $kunde) {
         for ($i = 0; $i -lt $lines.Count; $i++) {
             $ln = $lines[$i]
-            if ($ln -notmatch '(?i)\bDestination\b') { continue }
-            $idx = $ln.ToUpper().LastIndexOf('DESTINATION')
-            $kunde = ConvertTo-FuKunde ($ln.Substring($idx + 11))
+            if ($ln -notmatch '(?i)\bCustomer\b') { continue }
+            if ($ln -match "(?i)Customer\W{0,2}s\b") { continue }
+            if ($ln -match '(?i)Customer\s+Code') { continue }
+            $idx = $ln.ToUpper().LastIndexOf('CUSTOMER')
+            $kunde = ConvertTo-FuKunde ($ln.Substring($idx + 8))
             if (-not $kunde -and $i + 1 -lt $lines.Count) { $kunde = ConvertTo-FuKunde $lines[$i + 1] }
             if ($kunde) { break }
         }
