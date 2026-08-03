@@ -2626,38 +2626,12 @@ function Resolve-CreateTarget([string]$cur, [int]$month, [string]$year) {
     $p = $cur
     if ((Get-FolderMonth (Split-Path $p -Leaf)) -ne 0) { $p = Split-Path $p -Parent }
 
-    $chain = @()
-    $probe = $p
     for ($i = 0; $i -lt 5; $i++) {
-        if (-not $probe) { break }
-        $leaf = Split-Path $probe -Leaf
-        $py = Get-FolderYear $leaf
-        if ($py -and ((Get-FolderMonth $leaf) -eq 0)) {
-            if ($py -eq $year) { break }
-            $parent = Split-Path $probe -Parent
-            $sib = @(Get-ChildItem -LiteralPath $parent -Directory -ErrorAction SilentlyContinue | Where-Object { ((Get-FolderMonth $_.Name) -eq 0) -and ((Get-FolderYear $_.Name) -eq $year) })
-            if ($sib.Count -gt 0) {
-                $newBase = $sib[0].FullName
-                foreach ($seg in $chain) {
-                    $cand = Join-Path $newBase $seg
-                    if (Test-Path -LiteralPath $cand) { $newBase = $cand } else { break }
-                }
-                return @{ Parent = $newBase; NeedYear = "" }
-            }
-            return @{ Parent = $parent; NeedYear = $year }
-        }
-        $chain = @($leaf) + $chain
-        $probe = Split-Path $probe -Parent
-    }
-
-    $flatMonths = @(Get-ChildItem -LiteralPath $p -Directory -ErrorAction SilentlyContinue | Where-Object { (Get-FolderMonth $_.Name) -ne 0 })
-    if ($flatMonths.Count -eq 0) {
-        $yearDirs = @(Get-ChildItem -LiteralPath $p -Directory -ErrorAction SilentlyContinue | Where-Object { ((Get-FolderMonth $_.Name) -eq 0) -and (Get-FolderYear $_.Name) })
-        if ($yearDirs.Count -gt 0) {
-            $match = @($yearDirs | Where-Object { (Get-FolderYear $_.Name) -eq $year })
-            if ($match.Count -gt 0) { return @{ Parent = $match[0].FullName; NeedYear = "" } }
-            return @{ Parent = $p; NeedYear = $year }
-        }
+        $leaf = Split-Path $p -Leaf
+        if (-not ((Get-FolderYear $leaf) -and ((Get-FolderMonth $leaf) -eq 0))) { break }
+        $parent = Split-Path $p -Parent
+        if (-not $parent) { break }
+        $p = $parent
     }
 
     return @{ Parent = $p; NeedYear = "" }
@@ -2670,10 +2644,9 @@ function Resolve-StartFolder([string]$root, [hashtable]$info) {
     for ($d = 0; $d -lt 6; $d++) {
         $children = @(Get-ChildItem -LiteralPath $start -Directory -ErrorAction SilentlyContinue)
         if ($children.Count -eq 0) { break }
-        $hasFlatMonths = (@($children | Where-Object { (Get-FolderMonth $_.Name) -ne 0 })).Count -gt 0
         $bestChild = $null; $bestScore = 0; $bestMy = 0
         foreach ($c in $children) {
-            if ($hasFlatMonths -and (Get-FolderMonth $c.Name) -eq 0 -and (Get-FolderYear $c.Name)) { continue }
+            if ((Get-FolderMonth $c.Name) -eq 0 -and (Get-FolderYear $c.Name)) { continue }
             $my = Test-FolderMonth $c.Name $info.Month $info.Year
             $si = Score-FolderSite $c.Name $locMatch
             $cu = 0
