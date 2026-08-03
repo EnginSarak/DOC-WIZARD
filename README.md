@@ -2,7 +2,7 @@
 
 <img src="docs/01-main-menu.png" alt="DOC WIZARD" width="520"/>
 
-**DOC WIZARD** · Version 1.0.0
+**DOC WIZARD** · Version 1.1.0
 
 *A PowerShell-based tool that automates renaming, printing, filing and Excel generation for warehouse pick lists and delivery notes*
 
@@ -11,7 +11,7 @@
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6?logo=windows&logoColor=white)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1-5391FE?logo=powershell&logoColor=white)
 ![Excel](https://img.shields.io/badge/Excel-COM%20interop-217346?logo=microsoftexcel&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 
 </div>
 
@@ -25,10 +25,12 @@
   - [Pump picks](#pump-picks)
   - [Print](#print)
   - [Move to folders](#move-to-folders)
+  - [Scanned documents (beta)](#scanned-documents-beta)
   - [Settings](#settings)
 - [Install](#install)
 - [Tech stack](#tech-stack)
 - [Project structure](#project-structure)
+- [Changelog](#changelog)
 
 ---
 
@@ -85,18 +87,32 @@ go out twice by accident.
 
 Each entry moves the full bundle — pick list with its pump list, groupage with its
 sheet. Control files get their own section and go to the pump control folder, not the
-print queue. Delivery documents are routed by reading customer, country and date out of
-the PDF and suggesting the matching month folder; the customer, location and country
-found in the document are shown so the target can be checked before filing. Deliveries
-going to the same customer, location and country are grouped into one entry and moved
-together.
+print queue. Delivery documents are routed by reading the destination address, country
+and date out of the PDF — including addresses drawn with an embedded font — and
+suggesting the matching month folder; the customer, location and country found in the
+document are shown so the target can be checked before filing. Deliveries going to the
+same customer, location and country are grouped into one entry and moved together.
+Plain year folders (e.g. `2026`) used only as an end-of-year archive are never treated
+as a filing target — new month folders always go beside them, and when a month folder
+doesn't exist yet, creating it is offered first.
+
+### Scanned documents (beta)
+
+Warehouse staff scan the signed delivery note after every pickup, and those scans land
+in a folder with generic names. DOC WIZARD reads them with the OCR built into Windows —
+no internet connection, no extra software — recognizes the delivery note, and renames
+it the same way as the digital documents: `FÜ_<customer>_<order number>_<scan date>.pdf`.
+A second entry, **Auto move FÜ documents**, then files the renamed scans into the same
+customer/country folders as the regular delivery documents, using the destination
+address read from the scan.
 
 ### Settings
 
 <img src="docs/06-settings.png" width="620"/>
 
-Folders and printer are asked once and stored next to the script. `reset.bat` clears
-all of it — run it before handing the folder to someone else.
+Folders and printer are asked once and stored next to the script, including the Halle M
+scan folder used by the scanned-documents feature. `reset.bat` clears all of it — run it
+before handing the folder to someone else.
 
 ---
 
@@ -136,6 +152,34 @@ DOC WIZARD/
 
 `_doc_wizard_settings.txt`, `_doc_wizard_pairs.txt` and `_doc_wizard_printed.txt` are
 created at runtime and never leave the machine.
+
+---
+
+## Changelog
+
+### 1.1.0
+
+- Transfer orders (`TRN-ORD-...`) are now recognized exactly like sales orders
+  everywhere — renaming, groupage, move and print.
+- Fixed addresses drawn with an embedded font (e.g. accented city names) not being
+  read, which could leave the country undetected.
+- Move to folders now routes by the destination address instead of the customer's
+  billing address, when the two differ.
+- Move to folders no longer creates or navigates into a plain year folder used as an
+  end-of-year archive — new month folders always land beside it.
+- The "Create folder" option is now offered first when the month folder for the
+  shipment date doesn't exist yet.
+- Fixed a slowdown in Print introduced by the embedded-font address reading.
+- Annotate stamp text moved further left so it no longer runs off pick lists.
+- Fixed a crash building the pump list on some pick lists.
+- New (beta): **FÜ scan** — recognizes and renames scanned, signed delivery documents
+  using the OCR built into Windows, no internet required.
+- New (beta): **Auto move FÜ documents** — files the renamed scans the same way as the
+  regular delivery documents.
+
+### 1.0.0
+
+First release.
 
 ---
 
