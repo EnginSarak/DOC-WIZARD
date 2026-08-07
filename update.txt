@@ -1,5 +1,5 @@
-VERSION=1.1.1
-NOTE=Banner now redraws live on window resize and falls back to the compact style when the window is too narrow, instead of getting garbled
+VERSION=1.0.0
+NOTE=Banner redrawn smaller with a live-resize fix, app icon corrected to match the PROMEDIA logo, version line now in blue
 FILE=_promedia_copilot.ps1
 FILE=PROMEDIA COPILOT.bat
 FILE=reset.bat
