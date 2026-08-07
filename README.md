@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="docs/01-main-menu.png" alt="DOC WIZARD" width="520"/>
+<img src="docs/01-main-menu.png" alt="PROMEDIA COPILOT" width="520"/>
 
-**DOC WIZARD** · Version 1.1.0
+**PROMEDIA COPILOT** · Version 1.1.0
 
 *A PowerShell-based tool that automates renaming, printing, filing and Excel generation for warehouse pick lists and delivery notes*
 
@@ -41,7 +41,7 @@ List.pdf`. Getting them into the right filename, the right printer tray and the
 right folder is the same handful of steps every time — and building the pump list and
 scan sheet for a pump pick means re-typing serial numbers by hand.
 
-DOC WIZARD reads the PDFs directly and does all of that: renaming, stamping, printing,
+PROMEDIA COPILOT reads the PDFs directly and does all of that: renaming, stamping, printing,
 filing, and generating the Excel sheets from data already sitting in the file. No line
 list export, no copy-paste, no template hunting.
 
@@ -99,7 +99,7 @@ doesn't exist yet, creating it is offered first.
 ### Scanned documents (beta)
 
 Warehouse staff scan the signed delivery note after every pickup, and those scans land
-in a folder with generic names. DOC WIZARD reads them with the OCR built into Windows —
+in a folder with generic names. PROMEDIA COPILOT reads them with the OCR built into Windows —
 no internet connection, no extra software — recognizes the delivery note, and renames
 it the same way as the digital documents: `FÜ_<customer>_<order number>_<scan date>.pdf`.
 A second entry, **Auto move FÜ documents**, then files the renamed scans into the same
@@ -119,7 +119,7 @@ before handing the folder to someone else.
 ## Install
 
 ```
-Code → Download ZIP → unpack → run "DOC WIZARD.bat"
+Code → Download ZIP → unpack → run "PROMEDIA COPILOT.bat"
 ```
 
 First start asks for folders and printer once.
@@ -139,9 +139,9 @@ First start asks for folders and printer once.
 ## Project structure
 
 ```
-DOC WIZARD/
-├── DOC WIZARD.bat              starts the tool
-├── _doc_wizard.ps1             the program
+PROMEDIA COPILOT/
+├── PROMEDIA COPILOT.bat         starts the tool
+├── _promedia_copilot.ps1        the program
 ├── reset.bat                   clears personal settings
 ├── update.txt                  version + file list for the updater
 ├── pumplist_template.xlsx      pump list template
@@ -150,8 +150,8 @@ DOC WIZARD/
 └── docs/                       screenshots used above
 ```
 
-`_doc_wizard_settings.txt`, `_doc_wizard_pairs.txt` and `_doc_wizard_printed.txt` are
-created at runtime and never leave the machine.
+`_promedia_copilot_settings.txt`, `_promedia_copilot_pairs.txt` and
+`_promedia_copilot_printed.txt` are created at runtime and never leave the machine.
 
 ---
 
@@ -159,6 +159,9 @@ created at runtime and never leave the machine.
 
 ### 1.1.0
 
+- Renamed the tool from DOC WIZARD to **PROMEDIA COPILOT** — new banner, new icon,
+  new filenames throughout. Existing settings, remembered pairs and printed markers
+  are carried over automatically on first run.
 - Transfer orders (`TRN-ORD-...`) are now recognized exactly like sales orders
   everywhere — renaming, groupage, move and print.
 - Fixed addresses drawn with an embedded font (e.g. accented city names) not being
