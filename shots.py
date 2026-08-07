@@ -132,3 +132,25 @@ r += [[('', 'Gray')],
       [('   updated    : pumplist_template.xlsx', 'Green')],
       [('', 'Gray')]]
 render(r, O + '07-update.png')
+
+# 8 FU scan
+r = header()
+r += [[('', 'Gray')],
+      [('  IMG_20260807_142211.pdf  ->  FÜ_CUSTOMER_A_SORD26-00384_2026-08-07.pdf', 'Green')],
+      [('  Scan_003.pdf  ->  FÜ_CUSTOMER_B_SORD26-00390_2026-08-07.pdf', 'Green')],
+      [('', 'Gray')],
+      [(LIGHT, 'DarkCyan')],
+      [('   OCR read (Windows OCR, offline):  2 of 2 recognized', 'Yellow')],
+      [('', 'Gray')],
+      [('   Auto move FÜ documents?  (Y/N): ', 'Gray'), ('y', 'White')],
+      [('     moved : FÜ_CUSTOMER_A_SORD26-00384_2026-08-07.pdf   ->  ...\\2026\\08 August', 'Green')],
+      [('     moved : FÜ_CUSTOMER_B_SORD26-00390_2026-08-07.pdf   ->  ...\\2026\\08 August', 'Green')],
+      [('', 'Gray')],
+      [(LIGHT, 'DarkCyan')],
+      [('   SUMMARY', 'Cyan')],
+      [('     Renamed        : 2', 'Green')],
+      [('     Moved          : 2', 'Green')],
+      [('     Errors         : 0', 'DarkGray')],
+      [('', 'Gray')]]
+render(r, O + '08-fu-scan.png')
+

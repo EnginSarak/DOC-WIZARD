@@ -98,6 +98,8 @@ doesn't exist yet, creating it is offered first.
 
 ### Scanned documents (beta)
 
+<img src="docs/08-fu-scan.png" width="620"/>
+
 Warehouse staff scan the signed delivery note after every pickup, and those scans land
 in a folder with generic names. PROMEDIA COPILOT reads them with the OCR built into Windows —
 no internet connection, no extra software — recognizes the delivery note, and renames
