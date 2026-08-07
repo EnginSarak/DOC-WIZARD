@@ -6,6 +6,9 @@ BOLD = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.
 CW = FONT.getlength('M')
 LH = 20
 BG = '#0C0C0C'
+
+_ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'promedia_copilot.ico')
+ICON = Image.open(_ICON_PATH).convert('RGBA').resize((20, 20), Image.LANCZOS) if os.path.exists(_ICON_PATH) else None
 C = {
     'Gray': '#CCCCCC', 'DarkGray': '#767676', 'Cyan': '#61D6D6', 'DarkCyan': '#3A96DD',
     'Yellow': '#F9F1A5', 'DarkYellow': '#C19C00', 'Red': '#E74856', 'Green': '#16C60C',
@@ -42,7 +45,11 @@ def render(rows, path, width=None, title='PROMEDIA COPILOT'):
     dr = ImageDraw.Draw(img)
     dr.rectangle([0, 0, W, TB], fill='#2B2B2B')
     dr.rectangle([8, 6, 8 + int(CW * 16), TB - 4], fill='#0C0C0C')
-    dr.text((20, 11), title, font=FONT, fill='#DDDDDD')
+    text_x = 20
+    if ICON:
+        img.paste(ICON, (14, (TB - ICON.height) // 2), ICON)
+        text_x = 14 + ICON.width + 8
+    dr.text((text_x, 11), title, font=FONT, fill='#DDDDDD')
     y = TB + 10
     for row in rows:
         x = 12
