@@ -15,12 +15,8 @@ $latin = [System.Text.Encoding]::GetEncoding(28591)
 $streamRx = [regex]::new('stream\r?\n(.*?)\r?\nendstream', [System.Text.RegularExpressions.RegexOptions]::Singleline)
 
 $BannerStyles = @(
-    @{ N = 'Shadow'; D = '4paI4paI4paI4paI4paI4paI4pWXICDilojilojilojilojilojilojilZcgIOKWiOKWiOKWiOKWiOKWiOKWiOKVlwrilojilojilZTilZDilZDilojilojilZfilojilojilZTilZDilZDilZDilojilojilZfilojilojilZTilZDilZDilZDilZDilZ0K4paI4paI4pWRICDilojilojilZHilojilojilZEgICDilojilojilZHilojilojilZEgICAgIArilojilojilZEgIOKWiOKWiOKVkeKWiOKWiOKVkSAgIOKWiOKWiOKVkeKWiOKWiOKVkSAgICAgCuKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKVmuKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKVmuKWiOKWiOKWiOKWiOKWiOKWiOKVlwrilZrilZDilZDilZDilZDilZDilZ0gIOKVmuKVkOKVkOKVkOKVkOKVkOKVnSAg4pWa4pWQ4pWQ4pWQ4pWQ4pWQ4pWd'; W = '4paI4paI4pWXICAgIOKWiOKWiOKVl+KWiOKWiOKVl+KWiOKWiOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilojilojilojilZcg4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKWiOKWiOKWiOKWiOKVlyAK4paI4paI4pWRICAgIOKWiOKWiOKVkeKWiOKWiOKVkeKVmuKVkOKVkOKWiOKWiOKWiOKVlOKVneKWiOKWiOKVlOKVkOKVkOKWiOKWiOKVl+KWiOKWiOKVlOKVkOKVkOKWiOKWiOKVl+KWiOKWiOKVlOKVkOKVkOKWiOKWiOKVlwrilojilojilZEg4paI4pWXIOKWiOKWiOKVkeKWiOKWiOKVkSAg4paI4paI4paI4pWU4pWdIOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKVkeKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKWiOKWiOKVkSAg4paI4paI4pWRCuKWiOKWiOKVkeKWiOKWiOKWiOKVl+KWiOKWiOKVkeKWiOKWiOKVkSDilojilojilojilZTilZ0gIOKWiOKWiOKVlOKVkOKVkOKWiOKWiOKVkeKWiOKWiOKVlOKVkOKVkOKWiOKWiOKVl+KWiOKWiOKVkSAg4paI4paI4pWRCuKVmuKWiOKWiOKWiOKVlOKWiOKWiOKWiOKVlOKVneKWiOKWiOKVkeKWiOKWiOKWiOKWiOKWiOKWiOKWiOKVl+KWiOKWiOKVkSAg4paI4paI4pWR4paI4paI4pWRICDilojilojilZHilojilojilojilojilojilojilZTilZ0KIOKVmuKVkOKVkOKVneKVmuKVkOKVkOKVnSDilZrilZDilZ3ilZrilZDilZDilZDilZDilZDilZDilZ3ilZrilZDilZ0gIOKVmuKVkOKVneKVmuKVkOKVnSAg4pWa4pWQ4pWd4pWa4pWQ4pWQ4pWQ4pWQ4pWQ4pWdIA==' }
-    @{ N = 'Block'; D = '4paI4paI4paI4paI4paI4paIICAg4paI4paI4paI4paI4paI4paIICAg4paI4paI4paI4paI4paI4paIIArilojiloggICDilojilogg4paI4paIICAgIOKWiOKWiCDilojiloggICAgICAK4paI4paIICAg4paI4paIIOKWiOKWiCAgICDilojilogg4paI4paIICAgICAgCuKWiOKWiCAgIOKWiOKWiCDilojiloggICAg4paI4paIIOKWiOKWiCAgICAgIArilojilojilojilojilojiloggICDilojilojilojilojilojiloggICDilojilojilojilojilojilogg'; W = '4paI4paIICAgICDilojilogg4paI4paIIOKWiOKWiOKWiOKWiOKWiOKWiOKWiCAg4paI4paI4paI4paI4paIICDilojilojilojilojilojiloggIOKWiOKWiOKWiOKWiOKWiOKWiCAgCuKWiOKWiCAgICAg4paI4paIIOKWiOKWiCAgICDilojilojiloggIOKWiOKWiCAgIOKWiOKWiCDilojiloggICDilojilogg4paI4paIICAg4paI4paIIArilojiloggIOKWiCAg4paI4paIIOKWiOKWiCAgIOKWiOKWiOKWiCAgIOKWiOKWiOKWiOKWiOKWiOKWiOKWiCDilojilojilojilojilojiloggIOKWiOKWiCAgIOKWiOKWiCAK4paI4paIIOKWiOKWiOKWiCDilojilogg4paI4paIICDilojilojiloggICAg4paI4paIICAg4paI4paIIOKWiOKWiCAgIOKWiOKWiCDilojiloggICDilojiloggCiDilojilojilogg4paI4paI4paIICDilojilogg4paI4paI4paI4paI4paI4paI4paIIOKWiOKWiCAgIOKWiOKWiCDilojiloggICDilojilogg4paI4paI4paI4paI4paI4paIICA=' }
-    @{ N = 'Classic'; D = 'IF9fX19fICAgX19fXyAgIF9fX19fIAp8ICBfXyBcIC8gX18gXCAvIF9fX198CnwgfCAgfCB8IHwgIHwgfCB8ICAgICAKfCB8ICB8IHwgfCAgfCB8IHwgICAgIAp8IHxfX3wgfCB8X198IHwgfF9fX18gCnxfX19fXy8gXF9fX18vIFxfX19fX3w='; W = 'X18gICAgICAgICAgX19fX19fXyBfX19fX18gICAgICAgICBfX19fXyAgX19fX18gIApcIFwgICAgICAgIC8gL18gICBffF9fXyAgLyAgIC9cICAgfCAgX18gXHwgIF9fIFwgCiBcIFwgIC9cICAvIC8gIHwgfCAgICAvIC8gICAvICBcICB8IHxfXykgfCB8ICB8IHwKICBcIFwvICBcLyAvICAgfCB8ICAgLyAvICAgLyAvXCBcIHwgIF8gIC98IHwgIHwgfAogICBcICAvXCAgLyAgIF98IHxfIC8gL19fIC8gX19fXyBcfCB8IFwgXHwgfF9ffCB8CiAgICBcLyAgXC8gICB8X19fX18vX19fX18vXy8gICAgXF9cX3wgIFxfXF9fX19fLyA=' }
-    @{ N = 'Bold'; D = 'X19fX19fIF9fX19fIF9fX19fIAp8ICBfICBcICBfICAvICBfXyBcCnwgfCB8IHwgfCB8IHwgLyAgXC8KfCB8IHwgfCB8IHwgfCB8ICAgIAp8IHwvIC9cIFxfLyAvIFxfXy9cCnxfX18vICBcX19fLyBcX19fXy8='; W = 'IF8gICAgXyBfX19fXyBfX19fX18gIF9fXyAgX19fX19fX19fX19fIAp8IHwgIHwgfF8gICBffF9fXyAgLyAvIF8gXCB8IF9fXyBcICBfICBcCnwgfCAgfCB8IHwgfCAgICAvIC8gLyAvX1wgXHwgfF8vIC8gfCB8IHwKfCB8L1x8IHwgfCB8ICAgLyAvICB8ICBfICB8fCAgICAvfCB8IHwgfApcICAvXCAgL198IHxfLi8gL19fX3wgfCB8IHx8IHxcIFx8IHwvIC8gCiBcLyAgXC8gXF9fXy9cX19fX18vXF98IHxfL1xffCBcX3xfX18vICA=' }
-    @{ N = 'Slim'; D = 'IF9fX19fXyAgIF9fX19fICBfX19fX19fCiB8ICAgICBcIHwgICAgIHwgfCAgICAgIAogfF9fX19fLyB8X19fX198IHxfX19fXyA='; W = 'IF8gIF8gIF8gX19fX18gX19fX19fIF9fX19fX18gIF9fX19fXyBfX19fX18gCiB8ICB8ICB8ICAgfCAgICBfX19fLyB8X19fX198IHxfX19fXy8gfCAgICAgXAogfF9ffF9ffCBfX3xfXyAvX19fX18gfCAgICAgfCB8ICAgIFxfIHxfX19fXy8=' }
-    @{ N = 'Plain'; D = 'RE9D'; W = 'V0laQVJE' }
+    @{ N = 'Original'; D = '4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKWiOKWiOKWiOKWiOKVlyAg4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKWiOKVlyAgIOKWiOKWiOKWiOKVl+KWiOKWiOKWiOKWiOKWiOKWiOKWiOKVl+KWiOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilZcg4paI4paI4paI4paI4paI4pWXIArilojilojilZTilZDilZDilojilojilZfilojilojilZTilZDilZDilojilojilZfilojilojilZTilZDilZDilZDilojilojilZfilojilojilojilojilZcg4paI4paI4paI4paI4pWR4paI4paI4pWU4pWQ4pWQ4pWQ4pWQ4pWd4paI4paI4pWU4pWQ4pWQ4paI4paI4pWX4paI4paI4pWR4paI4paI4pWU4pWQ4pWQ4paI4paI4pWXCuKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKWiOKWiOKVkSAgIOKWiOKWiOKVkeKWiOKWiOKVlOKWiOKWiOKWiOKWiOKVlOKWiOKWiOKVkeKWiOKWiOKWiOKWiOKWiOKVlyAg4paI4paI4pWRICDilojilojilZHilojilojilZHilojilojilojilojilojilojilojilZEK4paI4paI4pWU4pWQ4pWQ4pWQ4pWdIOKWiOKWiOKVlOKVkOKVkOKWiOKWiOKVl+KWiOKWiOKVkSAgIOKWiOKWiOKVkeKWiOKWiOKVkeKVmuKWiOKWiOKVlOKVneKWiOKWiOKVkeKWiOKWiOKVlOKVkOKVkOKVnSAg4paI4paI4pWRICDilojilojilZHilojilojilZHilojilojilZTilZDilZDilojilojilZEK4paI4paI4pWRICAgICDilojilojilZEgIOKWiOKWiOKVkeKVmuKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKWiOKWiOKVkSDilZrilZDilZ0g4paI4paI4pWR4paI4paI4paI4paI4paI4paI4paI4pWX4paI4paI4paI4paI4paI4paI4pWU4pWd4paI4paI4pWR4paI4paI4pWRICDilojilojilZEK4pWa4pWQ4pWdICAgICDilZrilZDilZ0gIOKVmuKVkOKVnSDilZrilZDilZDilZDilZDilZDilZ0g4pWa4pWQ4pWdICAgICDilZrilZDilZ3ilZrilZDilZDilZDilZDilZDilZDilZ3ilZrilZDilZDilZDilZDilZDilZ0g4pWa4pWQ4pWd4pWa4pWQ4pWdICDilZrilZDilZ0='; W = 'IOKWiOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilojilojilojilojilZcg4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKVl+KWiOKWiOKVlyAgICAgIOKWiOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilojilojilojilojilojilojilZcK4paI4paI4pWU4pWQ4pWQ4pWQ4pWQ4pWd4paI4paI4pWU4pWQ4pWQ4pWQ4paI4paI4pWX4paI4paI4pWU4pWQ4pWQ4paI4paI4pWX4paI4paI4pWR4paI4paI4pWRICAgICDilojilojilZTilZDilZDilZDilojilojilZfilZrilZDilZDilojilojilZTilZDilZDilZ0K4paI4paI4pWRICAgICDilojilojilZEgICDilojilojilZHilojilojilojilojilojilojilZTilZ3ilojilojilZHilojilojilZEgICAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIArilojilojilZEgICAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkeKWiOKWiOKVlOKVkOKVkOKVnSDilojilojilZHilojilojilZEgICAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIArilZrilojilojilojilojilojilojilZfilZrilojilojilojilojilojilojilZTilZ3ilojilojilZEgICAgIOKWiOKWiOKVkeKWiOKWiOKWiOKWiOKWiOKWiOKWiOKVl+KVmuKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVnSAgIOKWiOKWiOKVkSAgIAog4pWa4pWQ4pWQ4pWQ4pWQ4pWQ4pWdIOKVmuKVkOKVkOKVkOKVkOKVkOKVnSDilZrilZDilZ0gICAgIOKVmuKVkOKVneKVmuKVkOKVkOKVkOKVkOKVkOKVkOKVnSDilZrilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZ0gICAg4pWa4pWQ4pWdICAg' }
+    @{ N = 'Plain'; D = 'UFJPTUVESUE='; W = 'Q09QSUxPVA==' }
 )
 
 $script:BannerCache = $null
@@ -34,23 +30,17 @@ function Get-BannerArt {
     $st = $BannerStyles[$idx]
     $doc = ([System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($st.D)) -split "`n")
     $wiz = ([System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($st.W)) -split "`n")
-    $w = 0
-    $cnt = [math]::Min($doc.Count, $wiz.Count)
-    for ($i = 0; $i -lt $cnt; $i++) {
-        $lw = 2 + $doc[$i].Length + 1 + ($wiz[$i].TrimEnd()).Length
-        if ($lw -gt $w) { $w = $lw }
-    }
-    $byline = ("         Version " + $script:AppVersion + "  |  by Engin Sarak").Length
-    if ($byline -gt $w) { $w = $byline }
-    if ($st.N -eq 'Plain') {
-        $bar = "  " + ([string][char]0x2550 * 54)
-    } else {
-        $bw = $w - 2
-        if ($bw -lt 10) { $bw = 10 }
-        $bar = "  " + ([string][char]0x2550 * $bw)
-    }
-    $script:BannerCache = @{ Doc = $doc; Wiz = $wiz; Name = $st.N; Width = $w; Bar = $bar }
+    $script:BannerCache = @{ Doc = $doc; Wiz = $wiz; Name = $st.N }
     return $script:BannerCache
+}
+
+function Get-FullWidthBar {
+    param([char]$Char = [char]0x2550)
+    $w = 78
+    try { $cw = [Console]::WindowWidth; if ($cw -gt 0) { $w = $cw } } catch { }
+    $n = $w - 3
+    if ($n -lt 10) { $n = 10 }
+    return "  " + ([string]$Char * $n)
 }
 
 $light = "  " + ([string][char]0x2500 * 68)
@@ -201,25 +191,26 @@ $IsoCountry = @{
 
 function Show-Header {
     $art = Get-BannerArt
+    $bar = Get-FullWidthBar
     if ($art.Name -eq 'Plain') {
         Write-Host ""
-        Write-Host $art.Bar -ForegroundColor Magenta
-        Write-Host -NoNewline "  DOC" -ForegroundColor Cyan
-        Write-Host -NoNewline " WIZARD" -ForegroundColor Yellow
+        Write-Host $bar -ForegroundColor Red
+        Write-Host -NoNewline "  PROMEDIA" -ForegroundColor White
+        Write-Host -NoNewline "   COPILOT" -ForegroundColor White
         Write-Host ("   Version " + $script:AppVersion + "  |  by Engin Sarak") -ForegroundColor Red
-        Write-Host $art.Bar -ForegroundColor Magenta
+        Write-Host $bar -ForegroundColor Red
         return
     }
     Write-Host ""
-    Write-Host $art.Bar -ForegroundColor Magenta
+    Write-Host $bar -ForegroundColor Red
     Write-Host ""
     for ($i = 0; $i -lt $art.Doc.Count; $i++) {
-        Write-Host -NoNewline ("  " + $art.Doc[$i]) -ForegroundColor Cyan
-        Write-Host (" " + $art.Wiz[$i]) -ForegroundColor Yellow
+        Write-Host -NoNewline ("  " + $art.Doc[$i]) -ForegroundColor White
+        Write-Host ("   " + $art.Wiz[$i]) -ForegroundColor White
     }
     Write-Host ""
     Write-Host ("         Version " + $script:AppVersion + "  |  by Engin Sarak") -ForegroundColor Red
-    Write-Host $art.Bar -ForegroundColor Magenta
+    Write-Host $bar -ForegroundColor Red
 }
 
 $script:CanPosition = $false
@@ -233,22 +224,23 @@ try {
 function Get-HeaderRows {
     $rows = New-Object System.Collections.Generic.List[object]
     $art = Get-BannerArt
+    $bar = Get-FullWidthBar
     if ($art.Name -eq 'Plain') {
         $rows.Add(@(@{ T = ""; F = "Gray" }))
-        $rows.Add(@(@{ T = $art.Bar; F = "Magenta" }))
-        $rows.Add(@(@{ T = "  DOC"; F = "Cyan" }, @{ T = " WIZARD"; F = "Yellow" }, @{ T = ("   Version " + $script:AppVersion + "  |  by Engin Sarak"); F = "Red" }))
-        $rows.Add(@(@{ T = $art.Bar; F = "Magenta" }))
+        $rows.Add(@(@{ T = $bar; F = "Red" }))
+        $rows.Add(@(@{ T = "  PROMEDIA"; F = "White" }, @{ T = "   COPILOT"; F = "White" }, @{ T = ("   Version " + $script:AppVersion + "  |  by Engin Sarak"); F = "Red" }))
+        $rows.Add(@(@{ T = $bar; F = "Red" }))
         return ,$rows
     }
     $rows.Add(@(@{ T = ""; F = "Gray" }))
-    $rows.Add(@(@{ T = $art.Bar; F = "Magenta" }))
+    $rows.Add(@(@{ T = $bar; F = "Red" }))
     $rows.Add(@(@{ T = ""; F = "Gray" }))
     for ($i = 0; $i -lt $art.Doc.Count; $i++) {
-        $rows.Add(@(@{ T = ("  " + $art.Doc[$i]); F = "Cyan" }, @{ T = (" " + $art.Wiz[$i]); F = "Yellow" }))
+        $rows.Add(@(@{ T = ("  " + $art.Doc[$i]); F = "White" }, @{ T = ("   " + $art.Wiz[$i]); F = "White" }))
     }
     $rows.Add(@(@{ T = ""; F = "Gray" }))
     $rows.Add(@(@{ T = ("         Version " + $script:AppVersion + "  |  by Engin Sarak"); F = "Red" }))
-    $rows.Add(@(@{ T = $art.Bar; F = "Magenta" }))
+    $rows.Add(@(@{ T = $bar; F = "Red" }))
     return ,$rows
 }
 
@@ -650,7 +642,7 @@ function Test-WorkFileExists([string]$nameOrPrefix) {
 }
 
 function Invoke-Housekeeping {
-    $pf = Join-Path $AppDir "_doc_wizard_pairs.txt"
+    $pf = Get-PairsFile
     if (Test-Path -LiteralPath $pf) {
         $keep = New-Object System.Collections.Generic.List[string]
         foreach ($l in (Get-Content -LiteralPath $pf)) {
@@ -661,7 +653,7 @@ function Invoke-Housekeeping {
         try { Set-Content -LiteralPath $pf -Value $keep } catch { }
     }
 
-    $prf = Join-Path $AppDir "_doc_wizard_printed.txt"
+    $prf = Get-PrintedFile
     if (Test-Path -LiteralPath $prf) {
         $keep = New-Object System.Collections.Generic.List[string]
         foreach ($l in (Get-Content -LiteralPath $prf)) {
@@ -842,7 +834,7 @@ function Invoke-GroupageCheck {
         }
 
         if ($tpl.Count -eq 0) {
-            Write-Host "     Template not found in the DOC WIZARD folder." -ForegroundColor Yellow
+            Write-Host "     Template not found in the PROMEDIA COPILOT folder." -ForegroundColor Yellow
             Write-Host "     Put 'groupage_template.xlsx' there, then run again." -ForegroundColor DarkGray
             continue
         }
@@ -1103,7 +1095,7 @@ function Get-PumpFileName($data) {
 function New-PumpWorkbook($data, [string]$srcName) {
     $tpl = Get-PumpTemplate
     if (-not $tpl) {
-        Write-Host "     Template not found in the DOC WIZARD folder." -ForegroundColor Yellow
+        Write-Host "     Template not found in the PROMEDIA COPILOT folder." -ForegroundColor Yellow
         Write-Host "     Put 'pumplist_template.xlsx' there, then run again." -ForegroundColor DarkGray
         return $null
     }
@@ -1281,7 +1273,7 @@ function Invoke-Rename {
     $fail = 0
     $missingPairs = 0
 
-    $pairFile = Join-Path $AppDir "_doc_wizard_pairs.txt"
+    $pairFile = Get-PairsFile
     $pairs = @{}
     if (Test-Path -LiteralPath $pairFile) {
         foreach ($l in (Get-Content -LiteralPath $pairFile)) {
@@ -2099,7 +2091,7 @@ function Invoke-Print {
         Set-Setting 'PRINTER' $printer
     }
 
-    $printedFile = Join-Path $AppDir "_doc_wizard_printed.txt"
+    $printedFile = Get-PrintedFile
     $printed = New-Object System.Collections.Generic.HashSet[string]
     if (Test-Path -LiteralPath $printedFile) {
         foreach ($ln in (Get-Content -LiteralPath $printedFile)) {
@@ -2108,7 +2100,7 @@ function Invoke-Print {
         }
     }
 
-    $pairFile = Join-Path $AppDir "_doc_wizard_pairs.txt"
+    $pairFile = Get-PairsFile
     $pairs = @{}
     if (Test-Path -LiteralPath $pairFile) {
         foreach ($l in (Get-Content -LiteralPath $pairFile)) {
@@ -2671,7 +2663,25 @@ function Browse-ForFolder([string]$desc) {
     return $null
 }
 
-function Get-SettingsFile { return (Join-Path $AppDir "_doc_wizard_settings.txt") }
+function Get-SettingsFile { return (Join-Path $AppDir "_promedia_copilot_settings.txt") }
+
+function Get-PairsFile {
+    $f = Join-Path $AppDir "_promedia_copilot_pairs.txt"
+    if (-not (Test-Path -LiteralPath $f)) {
+        $old = Join-Path $AppDir "_doc_wizard_pairs.txt"
+        if (Test-Path -LiteralPath $old) { try { Copy-Item -LiteralPath $old -Destination $f -ErrorAction Stop } catch { } }
+    }
+    return $f
+}
+
+function Get-PrintedFile {
+    $f = Join-Path $AppDir "_promedia_copilot_printed.txt"
+    if (-not (Test-Path -LiteralPath $f)) {
+        $old = Join-Path $AppDir "_doc_wizard_printed.txt"
+        if (Test-Path -LiteralPath $old) { try { Copy-Item -LiteralPath $old -Destination $f -ErrorAction Stop } catch { } }
+    }
+    return $f
+}
 
 function Get-Settings {
     $f = Get-SettingsFile
@@ -2681,6 +2691,13 @@ function Get-Settings {
             if ($l -match '^([A-Z_]+)=(.*)$') { $h[$matches[1]] = $matches[2] }
         }
         return $h
+    }
+    $oldSettings = Join-Path $AppDir "_doc_wizard_settings.txt"
+    if (Test-Path -LiteralPath $oldSettings) {
+        foreach ($l in (Get-Content -LiteralPath $oldSettings)) {
+            if ($l -match '^([A-Z_]+)=(.*)$') { $h[$matches[1]] = $matches[2] }
+        }
+        if ($h.Count -gt 0) { Save-Settings $h; return $h }
     }
     $oldRoot = Join-Path $AppDir "_doc_wizard_root.cfg"
     $oldPrn = Join-Path $AppDir "_doc_wizard.cfg"
@@ -2965,7 +2982,7 @@ function Invoke-Move {
         return
     }
 
-    $pairFile = Join-Path $AppDir "_doc_wizard_pairs.txt"
+    $pairFile = Get-PairsFile
     $pairs = @{}
     if (Test-Path -LiteralPath $pairFile) {
         foreach ($l in (Get-Content -LiteralPath $pairFile)) {
@@ -3192,7 +3209,7 @@ function Invoke-Settings([bool]$requireAll) {
             $entries.Add(@{ Text = "Back"; Header = $false; Act = 'DONE' })
         }
 
-        $title = if ($requireAll) { "WELCOME TO DOC WIZARD" } else { "SETTINGS" }
+        $title = if ($requireAll) { "WELCOME TO PROMEDIA COPILOT" } else { "SETTINGS" }
         $sel = Show-DocMenu $title $entries.ToArray()
 
         if ($sel -lt 0) {
