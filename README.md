@@ -2,7 +2,7 @@
 
 <img src="docs/01-main-menu.png" alt="PROMEDIA COPILOT" width="520"/>
 
-**PROMEDIA COPILOT** · Version 1.1.0
+**PROMEDIA COPILOT** · Version 1.0.0
 
 *A PowerShell-based tool that automates renaming, printing, filing and Excel generation for warehouse pick lists and delivery notes*
 
@@ -11,7 +11,7 @@
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6?logo=windows&logoColor=white)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1-5391FE?logo=powershell&logoColor=white)
 ![Excel](https://img.shields.io/badge/Excel-COM%20interop-217346?logo=microsoftexcel&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
 
 </div>
 
@@ -157,11 +157,16 @@ PROMEDIA COPILOT/
 
 ## Changelog
 
-### 1.1.0
+### 1.0.0
 
 - Renamed the tool from DOC WIZARD to **PROMEDIA COPILOT** — new banner, new icon,
   new filenames throughout. Existing settings, remembered pairs and printed markers
   are carried over automatically on first run.
+- Banner now redraws live when the console window is resized instead of leaving the
+  terminal to reflow stale, oversized ASCII art, and falls back to a compact style
+  when the window is too narrow for it.
+- Banner artwork redrawn smaller and thinner, and the app icon now matches the
+  actual PROMEDIA logo mark; the version line reads in blue.
 - Transfer orders (`TRN-ORD-...`) are now recognized exactly like sales orders
   everywhere — renaming, groupage, move and print.
 - Fixed addresses drawn with an embedded font (e.g. accented city names) not being
@@ -179,10 +184,6 @@ PROMEDIA COPILOT/
   using the OCR built into Windows, no internet required.
 - New (beta): **Auto move FÜ documents** — files the renamed scans the same way as the
   regular delivery documents.
-
-### 1.0.0
-
-First release.
 
 ---
 

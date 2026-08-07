@@ -10,10 +10,11 @@ C = {
     'Gray': '#CCCCCC', 'DarkGray': '#767676', 'Cyan': '#61D6D6', 'DarkCyan': '#3A96DD',
     'Yellow': '#F9F1A5', 'DarkYellow': '#C19C00', 'Red': '#E74856', 'Green': '#16C60C',
     'DarkGreen': '#13A10E', 'Magenta': '#B4009E', 'White': '#F2F2F2', 'Black': '#0C0C0C',
+    'Blue': '#3B78FF', 'DarkBlue': '#0037DA', 'DarkRed': '#C50F1F', 'DarkMagenta': '#881798',
 }
 
-SHADOW_D = '4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKWiOKWiOKWiOKWiOKVlyAg4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKWiOKVlyAgIOKWiOKWiOKWiOKVl+KWiOKWiOKWiOKWiOKWiOKWiOKWiOKVl+KWiOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilZcg4paI4paI4paI4paI4paI4pWXIArilojilojilZTilZDilZDilojilojilZfilojilojilZTilZDilZDilojilojilZfilojilojilZTilZDilZDilZDilojilojilZfilojilojilojilojilZcg4paI4paI4paI4paI4pWR4paI4paI4pWU4pWQ4pWQ4pWQ4pWQ4pWd4paI4paI4pWU4pWQ4pWQ4paI4paI4pWX4paI4paI4pWR4paI4paI4pWU4pWQ4pWQ4paI4paI4pWXCuKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKWiOKWiOKVkSAgIOKWiOKWiOKVkeKWiOKWiOKVlOKWiOKWiOKWiOKWiOKVlOKWiOKWiOKVkeKWiOKWiOKWiOKWiOKWiOKVlyAg4paI4paI4pWRICDilojilojilZHilojilojilZHilojilojilojilojilojilojilojilZEK4paI4paI4pWU4pWQ4pWQ4pWQ4pWdIOKWiOKWiOKVlOKVkOKVkOKWiOKWiOKVl+KWiOKWiOKVkSAgIOKWiOKWiOKVkeKWiOKWiOKVkeKVmuKWiOKWiOKVlOKVneKWiOKWiOKVkeKWiOKWiOKVlOKVkOKVkOKVnSAg4paI4paI4pWRICDilojilojilZHilojilojilZHilojilojilZTilZDilZDilojilojilZEK4paI4paI4pWRICAgICDilojilojilZEgIOKWiOKWiOKVkeKVmuKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKWiOKWiOKVkSDilZrilZDilZ0g4paI4paI4pWR4paI4paI4paI4paI4paI4paI4paI4pWX4paI4paI4paI4paI4paI4paI4pWU4pWd4paI4paI4pWR4paI4paI4pWRICDilojilojilZEK4pWa4pWQ4pWdICAgICDilZrilZDilZ0gIOKVmuKVkOKVnSDilZrilZDilZDilZDilZDilZDilZ0g4pWa4pWQ4pWdICAgICDilZrilZDilZ3ilZrilZDilZDilZDilZDilZDilZDilZ3ilZrilZDilZDilZDilZDilZDilZ0g4pWa4pWQ4pWd4pWa4pWQ4pWdICDilZrilZDilZ0='
-SHADOW_W = 'IOKWiOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilojilojilojilojilZcg4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKVl+KWiOKWiOKVlyAgICAgIOKWiOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilojilojilojilojilojilojilZcK4paI4paI4pWU4pWQ4pWQ4pWQ4pWQ4pWd4paI4paI4pWU4pWQ4pWQ4pWQ4paI4paI4pWX4paI4paI4pWU4pWQ4pWQ4paI4paI4pWX4paI4paI4pWR4paI4paI4pWRICAgICDilojilojilZTilZDilZDilZDilojilojilZfilZrilZDilZDilojilojilZTilZDilZDilZ0K4paI4paI4pWRICAgICDilojilojilZEgICDilojilojilZHilojilojilojilojilojilojilZTilZ3ilojilojilZHilojilojilZEgICAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIArilojilojilZEgICAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkeKWiOKWiOKVlOKVkOKVkOKVkOKVnSDilojilojilZHilojilojilZEgICAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIArilZrilojilojilojilojilojilojilZfilZrilojilojilojilojilojilojilZTilZ3ilojilojilZEgICAgIOKWiOKWiOKVkeKWiOKWiOKWiOKWiOKWiOKWiOKWiOKVl+KVmuKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVnSAgIOKWiOKWiOKVkSAgIAog4pWa4pWQ4pWQ4pWQ4pWQ4pWQ4pWdIOKVmuKVkOKVkOKVkOKVkOKVkOKVnSDilZrilZDilZ0gICAgIOKVmuKVkOKVneKVmuKVkOKVkOKVkOKVkOKVkOKVkOKVnSDilZrilZDilZDilZDilZDilZDilZ0gICAg4pWa4pWQ4pWdICAg'
+SHADOW_D = '4paR4paI4paA4paI4paR4paI4paA4paE4paR4paI4paA4paI4paR4paI4paE4paI4paR4paI4paA4paA4paR4paI4paA4paE4paR4paA4paI4paA4paR4paI4paA4paICuKWkeKWiOKWgOKWgOKWkeKWiOKWgOKWhOKWkeKWiOKWkeKWiOKWkeKWiOKWkeKWiOKWkeKWiOKWgOKWgOKWkeKWiOKWkeKWiOKWkeKWkeKWiOKWkeKWkeKWiOKWgOKWiArilpHiloDilpHilpHilpHiloDilpHiloDilpHiloDiloDiloDilpHiloDilpHiloDilpHiloDiloDiloDilpHiloDiloDilpHilpHiloDiloDiloDilpHiloDilpHiloA='
+SHADOW_W = '4paR4paI4paA4paA4paR4paI4paA4paI4paR4paI4paA4paI4paR4paA4paI4paA4paR4paI4paR4paR4paR4paI4paA4paI4paR4paA4paI4paACuKWkeKWiOKWkeKWkeKWkeKWiOKWkeKWiOKWkeKWiOKWgOKWgOKWkeKWkeKWiOKWkeKWkeKWiOKWkeKWkeKWkeKWiOKWkeKWiOKWkeKWkeKWiOKWkQrilpHiloDiloDiloDilpHiloDiloDiloDilpHiloDilpHilpHilpHiloDiloDiloDilpHiloDiloDiloDilpHiloDiloDiloDilpHilpHiloDilpE='
 
 def banner():
     d = base64.b64decode(SHADOW_D).decode('utf-8').split('\n')
@@ -23,11 +24,11 @@ def banner():
 BAR = '  ' + '═' * 118
 LIGHT = '  ' + '─' * 68
 
-def header(version='1.1.0'):
+def header(version='1.0.0'):
     rows = [[('', 'Gray')], [(BAR, 'Red')], [('', 'Gray')]]
     rows += banner()
     rows += [[('', 'Gray')],
-             [('         Version %s  |  by Engin Sarak' % version, 'Red')],
+             [('         Version %s  |  by Engin Sarak' % version, 'Blue')],
              [(BAR, 'Red')]]
     return rows
 
