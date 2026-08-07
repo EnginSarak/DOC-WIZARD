@@ -11,3 +11,4 @@ _doc_wizard_update.txt
 CLAUDE.md
 render.py
 shots.py
+__pycache__/
