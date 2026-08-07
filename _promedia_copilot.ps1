@@ -15,7 +15,7 @@ $latin = [System.Text.Encoding]::GetEncoding(28591)
 $streamRx = [regex]::new('stream\r?\n(.*?)\r?\nendstream', [System.Text.RegularExpressions.RegexOptions]::Singleline)
 
 $BannerStyles = @(
-    @{ N = 'Original'; D = '4paR4paI4paA4paI4paR4paI4paA4paE4paR4paI4paA4paI4paR4paI4paE4paI4paR4paI4paA4paA4paR4paI4paA4paE4paR4paA4paI4paA4paR4paI4paA4paICuKWkeKWiOKWgOKWgOKWkeKWiOKWgOKWhOKWkeKWiOKWkeKWiOKWkeKWiOKWkeKWiOKWkeKWiOKWgOKWgOKWkeKWiOKWkeKWiOKWkeKWkeKWiOKWkeKWkeKWiOKWgOKWiArilpHiloDilpHilpHilpHiloDilpHiloDilpHiloDiloDiloDilpHiloDilpHiloDilpHiloDiloDiloDilpHiloDiloDilpHilpHiloDiloDiloDilpHiloDilpHiloA='; W = '4paR4paI4paA4paA4paR4paI4paA4paI4paR4paI4paA4paI4paR4paA4paI4paA4paR4paI4paR4paR4paR4paI4paA4paI4paR4paA4paI4paACuKWkeKWiOKWkeKWkeKWkeKWiOKWkeKWiOKWkeKWiOKWgOKWgOKWkeKWkeKWiOKWkeKWkeKWiOKWkeKWkeKWkeKWiOKWkeKWiOKWkeKWkeKWiOKWkQrilpHiloDiloDiloDilpHiloDiloDiloDilpHiloDilpHilpHilpHiloDiloDiloDilpHiloDiloDiloDilpHiloDiloDiloDilpHilpHiloDilpE=' }
+    @{ N = 'Original'; D = 'IF9fX18gIF9fX18gICBfX18gIF9fICBfXyBfX19fXyBfX19fIF9fXyAgICBfICAgIAp8ICBfIFx8ICBfIFwgLyBfIFx8ICBcLyAgfCBfX19ffCAgXyBcXyBffCAgLyBcICAgCnwgfF8pIHwgfF8pIHwgfCB8IHwgfFwvfCB8ICBffCB8IHwgfCB8IHwgIC8gXyBcICAKfCAgX18vfCAgXyA8fCB8X3wgfCB8ICB8IHwgfF9fX3wgfF98IHwgfCAvIF9fXyBcIAp8X3wgICB8X3wgXF9cXF9fXy98X3wgIHxffF9fX19ffF9fX18vX19fL18vICAgXF9c'; W = 'ICBfX19fIF9fXyAgX19fXyBfX18gXyAgICAgX19fIF9fX19fIAogLyBfX18vIF8gXHwgIF8gXF8gX3wgfCAgIC8gXyBcXyAgIF98CnwgfCAgfCB8IHwgfCB8XykgfCB8fCB8ICB8IHwgfCB8fCB8ICAKfCB8X198IHxffCB8ICBfXy98IHx8IHxfX3wgfF98IHx8IHwgIAogXF9fX19cX19fL3xffCAgfF9fX3xfX19fX1xfX18vIHxffCAg' }
     @{ N = 'Plain'; D = 'UFJPTUVESUE='; W = 'Q09QSUxPVA==' }
 )
 
