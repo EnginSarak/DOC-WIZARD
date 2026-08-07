@@ -1,5 +1,5 @@
-VERSION=1.1.0
-NOTE=Rebranded to PROMEDIA COPILOT; TRN orders, address/country fixes, destination-based filing, FU scan (beta)
+VERSION=1.1.1
+NOTE=Banner now redraws live on window resize and falls back to the compact style when the window is too narrow, instead of getting garbled
 FILE=_promedia_copilot.ps1
 FILE=PROMEDIA COPILOT.bat
 FILE=reset.bat

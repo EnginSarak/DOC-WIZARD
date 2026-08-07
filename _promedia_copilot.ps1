@@ -34,6 +34,20 @@ function Get-BannerArt {
     return $script:BannerCache
 }
 
+function Get-EffectiveBannerArt {
+    $art = Get-BannerArt
+    if ($art.Name -eq 'Plain') { return $art }
+    $w = 78
+    try { $cw = [Console]::WindowWidth; if ($cw -gt 0) { $w = $cw } } catch { }
+    $maxDoc = ($art.Doc | Measure-Object -Property Length -Maximum).Maximum
+    $maxWiz = ($art.Wiz | Measure-Object -Property Length -Maximum).Maximum
+    $needed = 2 + $maxDoc + 3 + $maxWiz
+    if ($w -lt $needed) {
+        return @{ Doc = @(); Wiz = @(); Name = 'Plain' }
+    }
+    return $art
+}
+
 function Get-FullWidthBar {
     param([char]$Char = [char]0x2550)
     $w = 78
@@ -190,7 +204,7 @@ $IsoCountry = @{
 }
 
 function Show-Header {
-    $art = Get-BannerArt
+    $art = Get-EffectiveBannerArt
     $bar = Get-FullWidthBar
     if ($art.Name -eq 'Plain') {
         Write-Host ""
@@ -223,7 +237,7 @@ try {
 
 function Get-HeaderRows {
     $rows = New-Object System.Collections.Generic.List[object]
-    $art = Get-BannerArt
+    $art = Get-EffectiveBannerArt
     $bar = Get-FullWidthBar
     if ($art.Name -eq 'Plain') {
         $rows.Add(@(@{ T = ""; F = "Gray" }))
@@ -323,21 +337,31 @@ function Step-Snow($grid, $flakes) {
 }
 
 function Wait-KeyWithSnow($grid) {
-    if (-not $script:CanPosition) {
-        return [Console]::ReadKey($true)
-    }
-    if (-not (Test-SnowSeason)) {
-        return [Console]::ReadKey($true)
-    }
-    $flakes = New-SnowFlakes $grid
+    # Console apps get no OS resize event, so we poll window size here and
+    # bail out with $null to force the caller to re-render at the new size
+    # instead of leaving the stale wide banner for the terminal to reflow.
+    $snow = $script:CanPosition -and (Test-SnowSeason)
+    $flakes = $null
+    if ($snow) { $flakes = New-SnowFlakes $grid }
+    $w0 = 0; $h0 = 0
+    try { $w0 = [Console]::WindowWidth; $h0 = [Console]::WindowHeight } catch { }
     try {
         while (-not [Console]::KeyAvailable) {
-            Show-Snow $grid $flakes $false
-            Start-Sleep -Milliseconds 180
-            Show-Snow $grid $flakes $true
-            Step-Snow $grid $flakes
+            if ($snow) { Show-Snow $grid $flakes $false }
+            Start-Sleep -Milliseconds 150
+            if ($snow) { Show-Snow $grid $flakes $true; Step-Snow $grid $flakes }
+            try {
+                $w1 = [Console]::WindowWidth
+                $h1 = [Console]::WindowHeight
+                if ($w1 -ne $w0 -or $h1 -ne $h0) {
+                    if ($script:CanPosition) { try { Clear-Host } catch { } }
+                    return $null
+                }
+            } catch { }
         }
-    } catch { }
+    } catch {
+        return [Console]::ReadKey($true)
+    }
     return [Console]::ReadKey($true)
 }
 
@@ -385,7 +409,7 @@ function Get-ViewRows {
     $bannerLines = 6
     $extra = 6
     try {
-        $art = Get-BannerArt
+        $art = Get-EffectiveBannerArt
         $bannerLines = $art.Doc.Count
         if ($art.Name -eq 'Plain') { $extra = 3 }
     } catch { }
@@ -433,6 +457,7 @@ function Show-Menu {
         $grid = Render-Frame $frame
 
         $key = Wait-KeyWithSnow $grid
+        if ($null -eq $key) { continue }
         switch ($key.Key) {
             'UpArrow'   { $pos = ($pos - 1 + $selectable.Count) % $selectable.Count }
             'DownArrow' { $pos = ($pos + 1) % $selectable.Count }
@@ -901,7 +926,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '1.1.0'
+$script:AppVersion = '1.1.1'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -1595,6 +1620,7 @@ function Show-DocMenu {
         $grid = Render-Frame $frame
 
         $key = Wait-KeyWithSnow $grid
+        if ($null -eq $key) { continue }
         switch ($key.Key) {
             'UpArrow'   { $pos = ($pos - 1 + $selectable.Count) % $selectable.Count }
             'DownArrow' { $pos = ($pos + 1) % $selectable.Count }
