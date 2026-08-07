@@ -15,7 +15,7 @@ $latin = [System.Text.Encoding]::GetEncoding(28591)
 $streamRx = [regex]::new('stream\r?\n(.*?)\r?\nendstream', [System.Text.RegularExpressions.RegexOptions]::Singleline)
 
 $BannerStyles = @(
-    @{ N = 'Original'; D = '4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKWiOKWiOKWiOKWiOKVlyAg4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKWiOKVlyAgIOKWiOKWiOKWiOKVl+KWiOKWiOKWiOKWiOKWiOKWiOKWiOKVl+KWiOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilZcg4paI4paI4paI4paI4paI4pWXIArilojilojilZTilZDilZDilojilojilZfilojilojilZTilZDilZDilojilojilZfilojilojilZTilZDilZDilZDilojilojilZfilojilojilojilojilZcg4paI4paI4paI4paI4pWR4paI4paI4pWU4pWQ4pWQ4pWQ4pWQ4pWd4paI4paI4pWU4pWQ4pWQ4paI4paI4pWX4paI4paI4pWR4paI4paI4pWU4pWQ4pWQ4paI4paI4pWXCuKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKWiOKWiOKVkSAgIOKWiOKWiOKVkeKWiOKWiOKVlOKWiOKWiOKWiOKWiOKVlOKWiOKWiOKVkeKWiOKWiOKWiOKWiOKWiOKVlyAg4paI4paI4pWRICDilojilojilZHilojilojilZHilojilojilojilojilojilojilojilZEK4paI4paI4pWU4pWQ4pWQ4pWQ4pWdIOKWiOKWiOKVlOKVkOKVkOKWiOKWiOKVl+KWiOKWiOKVkSAgIOKWiOKWiOKVkeKWiOKWiOKVkeKVmuKWiOKWiOKVlOKVneKWiOKWiOKVkeKWiOKWiOKVlOKVkOKVkOKVnSAg4paI4paI4pWRICDilojilojilZHilojilojilZHilojilojilZTilZDilZDilojilojilZEK4paI4paI4pWRICAgICDilojilojilZEgIOKWiOKWiOKVkeKVmuKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVneKWiOKWiOKVkSDilZrilZDilZ0g4paI4paI4pWR4paI4paI4paI4paI4paI4paI4paI4pWX4paI4paI4paI4paI4paI4paI4pWU4pWd4paI4paI4pWR4paI4paI4pWRICDilojilojilZEK4pWa4pWQ4pWdICAgICDilZrilZDilZ0gIOKVmuKVkOKVnSDilZrilZDilZDilZDilZDilZDilZ0g4pWa4pWQ4pWdICAgICDilZrilZDilZ3ilZrilZDilZDilZDilZDilZDilZDilZ3ilZrilZDilZDilZDilZDilZDilZ0g4pWa4pWQ4pWd4pWa4pWQ4pWdICDilZrilZDilZ0='; W = 'IOKWiOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilojilojilojilojilZcg4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKVl+KWiOKWiOKVlyAgICAgIOKWiOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilojilojilojilojilojilojilZcK4paI4paI4pWU4pWQ4pWQ4pWQ4pWQ4pWd4paI4paI4pWU4pWQ4pWQ4pWQ4paI4paI4pWX4paI4paI4pWU4pWQ4pWQ4paI4paI4pWX4paI4paI4pWR4paI4paI4pWRICAgICDilojilojilZTilZDilZDilZDilojilojilZfilZrilZDilZDilojilojilZTilZDilZDilZ0K4paI4paI4pWRICAgICDilojilojilZEgICDilojilojilZHilojilojilojilojilojilojilZTilZ3ilojilojilZHilojilojilZEgICAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIArilojilojilZEgICAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkeKWiOKWiOKVlOKVkOKVkOKVnSDilojilojilZHilojilojilZEgICAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIOKWiOKWiOKVkSAgIArilZrilojilojilojilojilojilojilZfilZrilojilojilojilojilojilojilZTilZ3ilojilojilZEgICAgIOKWiOKWiOKVkeKWiOKWiOKWiOKWiOKWiOKWiOKWiOKVl+KVmuKWiOKWiOKWiOKWiOKWiOKWiOKVlOKVnSAgIOKWiOKWiOKVkSAgIAog4pWa4pWQ4pWQ4pWQ4pWQ4pWQ4pWdIOKVmuKVkOKVkOKVkOKVkOKVkOKVnSDilZrilZDilZ0gICAgIOKVmuKVkOKVneKVmuKVkOKVkOKVkOKVkOKVkOKVkOKVnSDilZrilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZ0gICAg4pWa4pWQ4pWdICAg' }
+    @{ N = 'Original'; D = '4paR4paI4paA4paI4paR4paI4paA4paE4paR4paI4paA4paI4paR4paI4paE4paI4paR4paI4paA4paA4paR4paI4paA4paE4paR4paA4paI4paA4paR4paI4paA4paICuKWkeKWiOKWgOKWgOKWkeKWiOKWgOKWhOKWkeKWiOKWkeKWiOKWkeKWiOKWkeKWiOKWkeKWiOKWgOKWgOKWkeKWiOKWkeKWiOKWkeKWkeKWiOKWkeKWkeKWiOKWgOKWiArilpHiloDilpHilpHilpHiloDilpHiloDilpHiloDiloDiloDilpHiloDilpHiloDilpHiloDiloDiloDilpHiloDiloDilpHilpHiloDiloDiloDilpHiloDilpHiloA='; W = '4paR4paI4paA4paA4paR4paI4paA4paI4paR4paI4paA4paI4paR4paA4paI4paA4paR4paI4paR4paR4paR4paI4paA4paI4paR4paA4paI4paACuKWkeKWiOKWkeKWkeKWkeKWiOKWkeKWiOKWkeKWiOKWgOKWgOKWkeKWkeKWiOKWkeKWkeKWiOKWkeKWkeKWkeKWiOKWkeKWiOKWkeKWkeKWiOKWkQrilpHiloDiloDiloDilpHiloDiloDiloDilpHiloDilpHilpHilpHiloDiloDiloDilpHiloDiloDiloDilpHiloDiloDiloDilpHilpHiloDilpE=' }
     @{ N = 'Plain'; D = 'UFJPTUVESUE='; W = 'Q09QSUxPVA==' }
 )
 
@@ -32,6 +32,20 @@ function Get-BannerArt {
     $wiz = ([System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($st.W)) -split "`n")
     $script:BannerCache = @{ Doc = $doc; Wiz = $wiz; Name = $st.N }
     return $script:BannerCache
+}
+
+function Get-EffectiveBannerArt {
+    $art = Get-BannerArt
+    if ($art.Name -eq 'Plain') { return $art }
+    $w = 78
+    try { $cw = [Console]::WindowWidth; if ($cw -gt 0) { $w = $cw } } catch { }
+    $maxDoc = ($art.Doc | Measure-Object -Property Length -Maximum).Maximum
+    $maxWiz = ($art.Wiz | Measure-Object -Property Length -Maximum).Maximum
+    $needed = 2 + $maxDoc + 3 + $maxWiz
+    if ($w -lt $needed) {
+        return @{ Doc = @(); Wiz = @(); Name = 'Plain' }
+    }
+    return $art
 }
 
 function Get-FullWidthBar {
@@ -190,14 +204,14 @@ $IsoCountry = @{
 }
 
 function Show-Header {
-    $art = Get-BannerArt
+    $art = Get-EffectiveBannerArt
     $bar = Get-FullWidthBar
     if ($art.Name -eq 'Plain') {
         Write-Host ""
         Write-Host $bar -ForegroundColor Red
         Write-Host -NoNewline "  PROMEDIA" -ForegroundColor White
         Write-Host -NoNewline "   COPILOT" -ForegroundColor White
-        Write-Host ("   Version " + $script:AppVersion + "  |  by Engin Sarak") -ForegroundColor Red
+        Write-Host ("   Version " + $script:AppVersion + "  |  by Engin Sarak") -ForegroundColor Blue
         Write-Host $bar -ForegroundColor Red
         return
     }
@@ -209,7 +223,7 @@ function Show-Header {
         Write-Host ("   " + $art.Wiz[$i]) -ForegroundColor White
     }
     Write-Host ""
-    Write-Host ("         Version " + $script:AppVersion + "  |  by Engin Sarak") -ForegroundColor Red
+    Write-Host ("         Version " + $script:AppVersion + "  |  by Engin Sarak") -ForegroundColor Blue
     Write-Host $bar -ForegroundColor Red
 }
 
@@ -223,12 +237,12 @@ try {
 
 function Get-HeaderRows {
     $rows = New-Object System.Collections.Generic.List[object]
-    $art = Get-BannerArt
+    $art = Get-EffectiveBannerArt
     $bar = Get-FullWidthBar
     if ($art.Name -eq 'Plain') {
         $rows.Add(@(@{ T = ""; F = "Gray" }))
         $rows.Add(@(@{ T = $bar; F = "Red" }))
-        $rows.Add(@(@{ T = "  PROMEDIA"; F = "White" }, @{ T = "   COPILOT"; F = "White" }, @{ T = ("   Version " + $script:AppVersion + "  |  by Engin Sarak"); F = "Red" }))
+        $rows.Add(@(@{ T = "  PROMEDIA"; F = "White" }, @{ T = "   COPILOT"; F = "White" }, @{ T = ("   Version " + $script:AppVersion + "  |  by Engin Sarak"); F = "Blue" }))
         $rows.Add(@(@{ T = $bar; F = "Red" }))
         return ,$rows
     }
@@ -239,7 +253,7 @@ function Get-HeaderRows {
         $rows.Add(@(@{ T = ("  " + $art.Doc[$i]); F = "White" }, @{ T = ("   " + $art.Wiz[$i]); F = "White" }))
     }
     $rows.Add(@(@{ T = ""; F = "Gray" }))
-    $rows.Add(@(@{ T = ("         Version " + $script:AppVersion + "  |  by Engin Sarak"); F = "Red" }))
+    $rows.Add(@(@{ T = ("         Version " + $script:AppVersion + "  |  by Engin Sarak"); F = "Blue" }))
     $rows.Add(@(@{ T = $bar; F = "Red" }))
     return ,$rows
 }
@@ -323,21 +337,31 @@ function Step-Snow($grid, $flakes) {
 }
 
 function Wait-KeyWithSnow($grid) {
-    if (-not $script:CanPosition) {
-        return [Console]::ReadKey($true)
-    }
-    if (-not (Test-SnowSeason)) {
-        return [Console]::ReadKey($true)
-    }
-    $flakes = New-SnowFlakes $grid
+    # Console apps get no OS resize event, so we poll window size here and
+    # bail out with $null to force the caller to re-render at the new size
+    # instead of leaving the stale wide banner for the terminal to reflow.
+    $snow = $script:CanPosition -and (Test-SnowSeason)
+    $flakes = $null
+    if ($snow) { $flakes = New-SnowFlakes $grid }
+    $w0 = 0; $h0 = 0
+    try { $w0 = [Console]::WindowWidth; $h0 = [Console]::WindowHeight } catch { }
     try {
         while (-not [Console]::KeyAvailable) {
-            Show-Snow $grid $flakes $false
-            Start-Sleep -Milliseconds 180
-            Show-Snow $grid $flakes $true
-            Step-Snow $grid $flakes
+            if ($snow) { Show-Snow $grid $flakes $false }
+            Start-Sleep -Milliseconds 150
+            if ($snow) { Show-Snow $grid $flakes $true; Step-Snow $grid $flakes }
+            try {
+                $w1 = [Console]::WindowWidth
+                $h1 = [Console]::WindowHeight
+                if ($w1 -ne $w0 -or $h1 -ne $h0) {
+                    if ($script:CanPosition) { try { Clear-Host } catch { } }
+                    return $null
+                }
+            } catch { }
         }
-    } catch { }
+    } catch {
+        return [Console]::ReadKey($true)
+    }
     return [Console]::ReadKey($true)
 }
 
@@ -385,7 +409,7 @@ function Get-ViewRows {
     $bannerLines = 6
     $extra = 6
     try {
-        $art = Get-BannerArt
+        $art = Get-EffectiveBannerArt
         $bannerLines = $art.Doc.Count
         if ($art.Name -eq 'Plain') { $extra = 3 }
     } catch { }
@@ -433,6 +457,7 @@ function Show-Menu {
         $grid = Render-Frame $frame
 
         $key = Wait-KeyWithSnow $grid
+        if ($null -eq $key) { continue }
         switch ($key.Key) {
             'UpArrow'   { $pos = ($pos - 1 + $selectable.Count) % $selectable.Count }
             'DownArrow' { $pos = ($pos + 1) % $selectable.Count }
@@ -901,7 +926,7 @@ function Stop-Spin($spin) {
     try { [Console]::Write("`r" + (' ' * 78) + "`r") } catch { }
 }
 
-$script:AppVersion = '1.1.0'
+$script:AppVersion = '1.0.0'
 
 function Get-PdfTjTokens([string]$path) {
     $bytes = [System.IO.File]::ReadAllBytes($path)
@@ -1595,6 +1620,7 @@ function Show-DocMenu {
         $grid = Render-Frame $frame
 
         $key = Wait-KeyWithSnow $grid
+        if ($null -eq $key) { continue }
         switch ($key.Key) {
             'UpArrow'   { $pos = ($pos - 1 + $selectable.Count) % $selectable.Count }
             'DownArrow' { $pos = ($pos + 1) % $selectable.Count }
